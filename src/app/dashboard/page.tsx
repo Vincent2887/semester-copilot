@@ -411,17 +411,71 @@ export default function StudentDashboard() {
             )}
           </section>
         ) : currentView === "workspace" ? (
-          /* 📥 NOTES WORKSPACE MODULE */
+          /* 📥 NOTES WORKSPACE INTEGRATED SEARCH EXPLORER */
           <section className="space-y-6">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
-              <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
-              <p className="text-xs text-slate-400 mb-6">Contribute curriculum materials, handouts, or reference packets to the student registry.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-8 text-center bg-slate-50/50 transition-colors cursor-pointer group">
-                <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">📤</span>
-                <p className="text-xs font-bold text-slate-700">Drag & drop notes resources or click to browse</p>
-                <p className="text-[10px] text-slate-400 mt-1">Accepts PDF, DOCX, or high-detail images up to 50MB</p>
-                <input type="file" className="hidden" id="file-upload-input" />
+              {/* LEFT COLUMN: MATERIAL CONTRIBUTION PORTAL */}
+              <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
+                  <p className="text-xs text-slate-400 mb-4">Contribute curriculum materials, handouts, or reference packets to the student registry.</p>
+                  
+                  <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer group">
+                    <span className="text-xl block mb-1 group-hover:scale-110 transition-transform">📤</span>
+                    <p className="text-[11px] font-bold text-slate-700">Drag & drop files or click to browse</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Accepts PDF, DOCX up to 50MB</p>
+                    <input type="file" className="hidden" id="workspace-upload-input" />
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                  <span>Server Registry Connection:</span>
+                  <span className="text-emerald-600 uppercase">● Live Synced</span>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: INDEX LISTINGS EXPLORER */}
+              <div className="lg:col-span-2 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">Department Shared Resources</h3>
+                    <p className="text-xs text-slate-400">Review community-verified study resources indexed across your batch.</p>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Search resources..." 
+                    className="w-full sm:w-48 px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400"
+                  />
+                </div>
+
+                {/* SIMULATED SHARED COURSE STACK */}
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Vector Calculus Formula Matrix (Unit 1-3)</span>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-0.5">PDF Document • 4.2 MB • Added yesterday</span>
+                    </div>
+                    <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
+                  </div>
+
+                  <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Database Management Systems Query Blueprints</span>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-0.5">DOCX Resource • 1.8 MB • Added 3 days ago</span>
+                    </div>
+                    <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
+                  </div>
+
+                  <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Data Structures Lecture Handout - Balanced Trees</span>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-0.5">PDF Document • 12.4 MB • Added last week</span>
+                    </div>
+                    <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
