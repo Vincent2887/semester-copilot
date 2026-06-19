@@ -280,6 +280,11 @@ export default function StudentDashboard() {
               <span>🔖</span> Bookmarks
             </button>
 
+            {/* 🧠 PLACEMENT HUB ENTRY NODE */}
+            <a href="/placement" className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all">
+              <span>🧠</span> Placement Hub
+            </a>
+
             <div>
               <button onClick={() => setLabDropdown(!labDropdown)} className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">
                 <div className="flex items-center gap-3"><span>🧪</span> Lab Practicals</div>
