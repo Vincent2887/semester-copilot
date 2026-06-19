@@ -119,6 +119,18 @@ export default function StudentDashboard() {
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [selectedLabYear, setSelectedLabYear] = useState<string | null>(null);
 
+  // 🔖 Dynamic Bookmarks Repository Array States
+  const [bookmarkedPaperIds, setBookmarkedPaperIds] = useState<string[]>([]);
+
+  // Toggles item saving status across the user layout dashboard
+  const handleToggleBookmarkAsset = (paperId: string) => {
+    setBookmarkedPaperIds((prevIds) =>
+      prevIds.includes(paperId)
+        ? prevIds.filter((id) => id !== paperId)
+        : [...prevIds, paperId]
+    );
+  };
+
   // 🛰️ Real-Time Supabase Profile Sync Hook
   useEffect(() => {
     async function syncDatabaseProfile() {
@@ -395,8 +407,16 @@ export default function StudentDashboard() {
                       <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No class handouts found in database framework.</div>
                     ) : (
                       papers.map((paper) => (
-                        <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
-                          <h4 className="text-xs font-bold text-slate-900">{paper.title}</h4>
+                        <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs relative">
+                          <button 
+                            onClick={() => handleToggleBookmarkAsset(paper.id)}
+                            className="absolute top-3 right-3 text-xs bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition"
+                          >
+                            {bookmarkedPaperIds.includes(paper.id) ? "🔖" : "⭐"}
+                          </button>
+                          <div className="pr-6">
+                            <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
+                          </div>
                           <a href={paper.file_url} target="_blank" rel="noreferrer" onClick={(e) => handleAccessResourceAsset(e, paper.file_url)} className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
                         </div>
                       ))
@@ -408,15 +428,24 @@ export default function StudentDashboard() {
                       <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No official university query logs discovered in registry layout.</div>
                     ) : (
                       Object.keys(activeBranchPyqs).map((subjectKey) => 
-                        activeBranchPyqs[subjectKey].map((pyq: any, i: number) => (
-                          <div key={i} className="border p-5 bg-white border-[#EBE8E0] rounded-2xl flex flex-col justify-between h-40 shadow-2xs">
-                            <div>
-                              <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{subjectKey}</span>
-                              <h4 className="text-xs font-black text-slate-900 mt-2">Official PYQ Paper ({pyq.year})</h4>
+                        activeBranchPyqs[subjectKey].map((pyq: any, i: number) => {
+                          const pyqUniqueId = `${subjectKey}-${pyq.year}`;
+                          return (
+                            <div key={i} className="border p-5 bg-white border-[#EBE8E0] rounded-2xl flex flex-col justify-between h-40 shadow-2xs relative">
+                              <button 
+                                onClick={() => handleToggleBookmarkAsset(pyqUniqueId)}
+                                className="absolute top-4 right-4 text-xs bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition"
+                              >
+                                {bookmarkedPaperIds.includes(pyqUniqueId) ? "🔖" : "⭐"}
+                              </button>
+                              <div>
+                                <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{subjectKey}</span>
+                                <h4 className="text-xs font-black text-slate-900 mt-2">Official PYQ Paper ({pyq.year})</h4>
+                              </div>
+                              <a href={pyq.pdfUrl} className="w-full bg-indigo-600 text-white text-xs font-bold py-2 rounded-xl text-center block">Download PDF</a>
                             </div>
-                            <a href={pyq.pdfUrl} className="w-full bg-indigo-600 text-white text-xs font-bold py-2 rounded-xl text-center block">Download PDF</a>
-                          </div>
-                        ))
+                          );
+                        })
                       )
                     )}
                   </div>
@@ -496,10 +525,50 @@ export default function StudentDashboard() {
           /* 🤖 INTERACTIVE AI STUDY ENGINE MODULE CONTAINER */
           <AiStudyEngine />
         ) : currentView === "bookmarks" ? (
-          /* 🔖 BOOKMARKS MODULE */
-          <section className="space-y-4">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs text-center text-xs text-slate-400 font-bold">
-              📁 Saved bookmarks cluster is currently empty. Star files to track them here.
+          /* 🔖 DYNAMIC BOOKMARKS ACTIVE REPOSITORY CONTAINER */
+          <section className="space-y-6">
+            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
+              <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
+              <p className="text-xs text-slate-400 mb-6">Review your pinned university assets and saved documentation files.</p>
+              
+              {bookmarkedPaperIds.length === 0 ? (
+                <div className="text-center py-12 text-xs text-slate-400 font-bold">
+                  📁 Your saved bookmarks collection is currently empty. Click the star button on any study material or paper to pin it here.
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Render Bookmarked regular handouts data matrix matches */}
+                  {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
+                    <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
+                        <button onClick={() => handleToggleBookmarkAsset(paper.id)} className="text-xs text-red-400 hover:text-red-600 cursor-pointer font-bold uppercase tracking-wider text-[10px]">Remove</button>
+                      </div>
+                      <a href={paper.file_url} target="_blank" rel="noreferrer" className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
+                    </div>
+                  ))}
+                  
+                  {/* Render Bookmarked local PYQ array elements matches */}
+                  {Object.keys(activeBranchPyqs).flatMap(subjectKey => 
+                    activeBranchPyqs[subjectKey].map((pyq: any) => ({
+                      id: `${subjectKey}-${pyq.year}`,
+                      title: `${subjectKey.toUpperCase()} - University PYQ (${pyq.year})`,
+                      pdfUrl: pyq.pdfUrl
+                    }))
+                  ).filter(item => bookmarkedPaperIds.includes(item.id)).map(pyqItem => (
+                    <div key={pyqItem.id} className="border p-4 bg-white rounded-xl border-indigo-100 h-36 flex flex-col justify-between shadow-2xs">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">PYQ</span>
+                          <h4 className="text-xs font-bold text-slate-900 mt-1 line-clamp-2">{pyqItem.title}</h4>
+                        </div>
+                        <button onClick={() => handleToggleBookmarkAsset(pyqItem.id)} className="text-xs text-red-400 hover:text-red-600 cursor-pointer font-bold uppercase tracking-wider text-[10px]">Remove</button>
+                      </div>
+                      <a href={pyqItem.pdfUrl} target="_blank" rel="noreferrer" className="w-full bg-indigo-600 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         ) : currentView === "labs" ? (
