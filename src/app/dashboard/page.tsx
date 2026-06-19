@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PaywallModal } from "../../components/ui/PaywallModal";
+import { AuthModal } from "../../components/ui/AuthModal";
 import { subjectBlueprintsRegistry, pastYearPapersRegistry, ExamNightPack } from "../../lib/subjectBlueprints";
 import AiStudyEngine from "../../components/AiStudyEngine";
 
@@ -100,10 +101,14 @@ export default function StudentDashboard() {
   const [cramMode, setCramMode] = useState(false);
   const [labDropdown, setLabDropdown] = useState(false);
   
-  // Premium Token State Configurations
+  // Account state structures
   const [userPlan, setUserPlan] = useState<"Free" | "Pro" | "Premium">("Free");
   const [availableCredits, setAvailableCredits] = useState(2);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  
+  // Authentication Trigger Handlers
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [activeUserEmail, setActiveUserEmail] = useState<string | null>(null);
   
   const [selectedUniv, setSelectedUniv] = useState<string | null>(null);
   const [selectedCollege, setSelectedCollege] = useState<string | null>(null);
@@ -111,7 +116,6 @@ export default function StudentDashboard() {
   
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   
   const [selectedSubjectKey, setSelectedSubjectKey] = useState<string>("dbms");
   const [activePackData, setActivePackData] = useState<ExamNightPack | null>(null);
@@ -119,10 +123,9 @@ export default function StudentDashboard() {
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [selectedLabYear, setSelectedLabYear] = useState<string | null>(null);
 
-  // 🔖 Dynamic Bookmarks Repository Array States
+  // Bookmark Collections State
   const [bookmarkedPaperIds, setBookmarkedPaperIds] = useState<string[]>([]);
 
-  // Toggles item saving status across the user layout dashboard
   const handleToggleBookmarkAsset = (paperId: string) => {
     setBookmarkedPaperIds((prevIds) =>
       prevIds.includes(paperId)
@@ -131,7 +134,7 @@ export default function StudentDashboard() {
     );
   };
 
-  // 🛰️ Real-Time Supabase Profile Sync Hook
+  // Live Supabase Verification Synchronization Hooks
   useEffect(() => {
     async function syncDatabaseProfile() {
       const structuralMockSessionId = "v1-vincent-test-uid-887";
@@ -143,7 +146,7 @@ export default function StudentDashboard() {
           setAvailableCredits(profile.credits);
         }
       } catch (syncError) {
-        console.warn("Local profile engine operating in standard fallback offline mode.");
+        console.warn("Operating profile dashboard in safe fallback/local mode.");
       }
     }
     syncDatabaseProfile();
@@ -179,7 +182,7 @@ export default function StudentDashboard() {
       }
       throw new Error("Fallback required");
     } catch (err) {
-      console.warn("Operating on local registry fallback.");
+      console.warn("Applying registry fallback mappings.");
       if (selectedBranch && pastYearPapersRegistry[selectedBranch]) {
         const localPapers = Object.keys(pastYearPapersRegistry[selectedBranch]).flatMap(subjectKey => 
           pastYearPapersRegistry[selectedBranch][subjectKey].map((paper: any) => ({
@@ -257,13 +260,26 @@ export default function StudentDashboard() {
     }`}>
       
       <PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} cramMode={cramMode} />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(email) => setActiveUserEmail(email)} />
       
-      {/* SIDEBAR NAVIGATION */}
+      {/* SIDEBAR NAVIGATION PANEL */}
       <aside className="bg-white border-r border-[#EBE8E0] p-6 hidden md:flex flex-col justify-between h-screen sticky top-0 w-64">
         <div className="space-y-6">
-          <div className="leading-none">
-            <span className="font-serif font-bold text-lg text-slate-900 block">Topperdeck</span>
-            <span className="text-[9px] font-black tracking-widest uppercase text-slate-400 mt-1 block">CRACK THE EXAM</span>
+          <div className="leading-none flex justify-between items-start gap-2">
+            <div>
+              <span className="font-serif font-bold text-lg text-slate-900 block">Topperdeck</span>
+              <span className="text-[9px] font-black tracking-widest uppercase text-slate-400 mt-1.5 block max-w-[130px] truncate">
+                {activeUserEmail ? `👤 ${activeUserEmail.split("@")[0]}` : "CRACK THE EXAM"}
+              </span>
+            </div>
+            {!activeUserEmail && (
+              <button 
+                onClick={() => setIsAuthOpen(true)} 
+                className="text-[9px] font-mono font-black text-indigo-600 uppercase underline cursor-pointer hover:text-indigo-800"
+              >
+                Connect
+              </button>
+            )}
           </div>
 
           <nav className="space-y-1">
@@ -280,7 +296,7 @@ export default function StudentDashboard() {
               <span>🔖</span> Bookmarks
             </button>
 
-            {/* 🧠 PLACEMENT HUB ENTRY NODE */}
+            {/* 🧠 PLACEMENT HUB SEPARATED ROUTE */}
             <a href="/placement" className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all">
               <span>🧠</span> Placement Hub
             </a>
@@ -301,7 +317,7 @@ export default function StudentDashboard() {
         </div>
       </aside>
 
-      {/* CORE CANVAS WORKSPACE */}
+      {/* CORE WORKSPACE VIEWPORT */}
       <div className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full flex flex-col transition-all duration-500">
         
         <header className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8 pb-4 border-b border-[#EBE8E0]">
@@ -311,7 +327,7 @@ export default function StudentDashboard() {
           <button onClick={() => setCramMode(!cramMode)} className="px-4 py-2 text-xs font-bold bg-white border border-[#EBE8E0] rounded-xl">Toggle Canvas Light</button>
         </header>
 
-        {/* CREDIT SYSTEM MODULE */}
+        {/* CREDIT WALLET MODULE */}
         <div className="mb-6 p-4 px-5 rounded-2xl border bg-white border-[#EBE8E0] text-slate-800 flex justify-between items-center text-xs font-bold shadow-2xs">
           <span className="flex items-center gap-2">
             <span>💳</span> Account Tier: <span className="text-indigo-600 font-black uppercase">{userPlan} Plan</span> 
@@ -323,7 +339,7 @@ export default function StudentDashboard() {
           )}
         </div>
 
-        {/* HERO PROMOTIONAL BANNER */}
+        {/* HERO CRAM BANNER */}
         {currentView !== "examNight" && (
           <div className="mb-8 p-6 rounded-3xl bg-gradient-to-br from-red-500 via-orange-500 to-indigo-600 text-white shadow-xl space-y-4 relative overflow-hidden">
             <div className="space-y-1 relative z-10">
@@ -352,7 +368,7 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* CONDITIONAL SYSTEM DISPLAY ROUTER */}
+        {/* LAYOUT CANVAS ROUTER */}
         {currentView === "papers" ? (
           <section className="space-y-6">
             <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#EBE8E0]">
@@ -459,11 +475,8 @@ export default function StudentDashboard() {
             )}
           </section>
         ) : currentView === "workspace" ? (
-          /* 📥 NOTES WORKSPACE INTEGRATED SEARCH EXPLORER */
           <section className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* LEFT COLUMN: MATERIAL CONTRIBUTION PORTAL */}
               <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
@@ -483,7 +496,6 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN: INDEX LISTINGS EXPLORER */}
               <div className="lg:col-span-2 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
                   <div>
@@ -527,10 +539,8 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "ai" ? (
-          /* 🤖 INTERACTIVE AI STUDY ENGINE MODULE CONTAINER */
           <AiStudyEngine />
         ) : currentView === "bookmarks" ? (
-          /* 🔖 DYNAMIC BOOKMARKS ACTIVE REPOSITORY CONTAINER */
           <section className="space-y-6">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
               <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
@@ -542,7 +552,6 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Render Bookmarked regular handouts data matrix matches */}
                   {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
                     <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
                       <div className="flex justify-between items-start gap-2">
@@ -553,7 +562,6 @@ export default function StudentDashboard() {
                     </div>
                   ))}
                   
-                  {/* Render Bookmarked local PYQ array elements matches */}
                   {Object.keys(activeBranchPyqs).flatMap(subjectKey => 
                     activeBranchPyqs[subjectKey].map((pyq: any) => ({
                       id: `${subjectKey}-${pyq.year}`,
@@ -577,7 +585,6 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "labs" ? (
-          /* 🧪 LAB PRACTICALS MODULE */
           <section className="space-y-6">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
               <h3 className="text-sm font-black text-slate-900 mb-1">
@@ -611,7 +618,6 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "examNight" && activePackData ? (
-          /* PRE-COMPILED SECURE PREMIUM VIEWER WORKBENCH */
           <section className="space-y-6">
             <div className="p-6 bg-[#0a0d1d] border border-slate-900 rounded-3xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
