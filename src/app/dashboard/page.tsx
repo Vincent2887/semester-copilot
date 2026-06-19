@@ -8,7 +8,6 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
   "JNTUH": {
     logo: "🏛️",
     colleges: [
-      /* --- Autonomous --- */
       "[Autonomous] JNTUH University College of Engineering, Hyderabad (Kukatpally)",
       "[Autonomous] VNR Vignana Jyothi Institute of Engineering and Technology (VNRVJIET)",
       "[Autonomous] Gokaraju Rangaraju Institute of Engineering and Technology (GRIET)",
@@ -40,7 +39,6 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
       "[Autonomous] Nalla Narasimha Reddy Education Society's Group of Institutions",
       "[Autonomous] Jayamukhi Institute of Technological Sciences",
       "[Autonomous] Keshav Memorial Institute of Technology (KMIT)",
-      /* --- Affiliated / Non-Autonomous --- */
       "[Affiliated] CMR Institute of Technology (CMRIT)",
       "[Affiliated] Marri Laxman Reddy Institute of Technology and Management (MLRTM)",
       "[Affiliated] TKR College of Engineering and Technology",
@@ -51,7 +49,7 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
       "[Affiliated] DRK College of Engineering and Technology",
       "[Affiliated] Kommuri Pratap Reddy Institute of Technology (KPRIT)",
       "[Affiliated] Arjun College of Technology & Sciences",
-      "[Affiliated] Brilliant Institute of Engineering & Technology",
+      "[Brilliant Institute of Engineering & Technology]",
       "[Affiliated] Ellenki College of Engineering and Technology",
       "[Affiliated] Global Institute of Engineering & Technology",
       "[Affiliated] Guru Nanak Institute of Technology (GNIT)",
@@ -66,13 +64,11 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
   "Osmania University (OU)": {
     logo: "🏰",
     colleges: [
-      /* --- Autonomous --- */
       "[Autonomous] University College of Engineering, Osmania University (UCEOU)",
       "[Autonomous] University College of Technology, Osmania University (UCTOU)",
       "[Autonomous] Vasavi College of Engineering (VCE)",
       "[Autonomous] Maturi Venkata Subba Rao (MVSR) Engineering College",
       "[Autonomous] Nizam College (Technical Programs)",
-      /* --- Affiliated / Non-Autonomous --- */
       "[Affiliated] Muffakham Jah College of Engineering and Technology (MJCET)",
       "[Affiliated] Stanley College of Engineering and Technology for Women",
       "[Affiliated] Matrusri Engineering College",
@@ -103,7 +99,7 @@ export default function StudentDashboard() {
   const [cramMode, setCramMode] = useState(false);
   const [labDropdown, setLabDropdown] = useState(false);
   
-  // Premium Token Economics Configuration
+  // Premium Token State Configurations
   const [userPlan, setUserPlan] = useState<"Free" | "Pro" | "Premium">("Free");
   const [availableCredits, setAvailableCredits] = useState(2);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
@@ -121,6 +117,24 @@ export default function StudentDashboard() {
   const [generatingPack, setGeneratingPack] = useState(false);
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [selectedLabYear, setSelectedLabYear] = useState<string | null>(null);
+
+  // 🛰️ Real-Time Supabase Profile Sync Hook
+  useEffect(() => {
+    async function syncDatabaseProfile() {
+      const structuralMockSessionId = "v1-vincent-test-uid-887";
+      try {
+        const { userDatabaseService } = await import("../../lib/supabase");
+        const { data: profile, error } = await userDatabaseService.fetchUserProfile(structuralMockSessionId);
+        if (profile && !error) {
+          setUserPlan(profile.plan);
+          setAvailableCredits(profile.credits);
+        }
+      } catch (syncError) {
+        console.warn("Local profile engine operating in standard fallback offline mode.");
+      }
+    }
+    syncDatabaseProfile();
+  }, []);
 
   useEffect(() => {
     if (selectedUniv && selectedCollege && selectedBranch) {
@@ -191,7 +205,6 @@ export default function StudentDashboard() {
 
     setSelectedSubjectKey(subjectKey);
     setGeneratingPack(true);
-    
     setGenerationStatus("Analyzing previous JNTUH query logs...");
     
     setTimeout(() => {
@@ -301,7 +314,7 @@ export default function StudentDashboard() {
               </span>
               <h2 className="text-xl font-black tracking-tight pt-1">🚨 EXAM TOMORROW?</h2>
               <p className="text-xs text-white/90 max-w-xl">
-                A student with an exam tomorrow wants only what they need to pass. Skip the 300-page textbooks and 100 long video clips.
+                Skip the 300-page textbooks and 100 long video clips. Get exactly what you need to clear your upcoming unit criteria smoothly.
               </p>
             </div>
             
@@ -378,7 +391,7 @@ export default function StudentDashboard() {
                 {paperTabMode === "notes" ? (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {papers.length === 0 ? (
-                      <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No class handouts found. Material can be added subsequently via the upload panel node.</div>
+                      <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No class handouts found in database framework.</div>
                     ) : (
                       papers.map((paper) => (
                         <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
@@ -449,7 +462,6 @@ export default function StudentDashboard() {
                   />
                 </div>
 
-                {/* SIMULATED SHARED COURSE STACK */}
                 <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                   <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
                     <div>
@@ -484,13 +496,13 @@ export default function StudentDashboard() {
           <section className="space-y-6">
             <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl border border-slate-800 shadow-sm">
               <h3 className="text-sm font-black mb-1">AI Study Module Synthesizer</h3>
-              <p className="text-xs text-slate-400">Transform dense textbook reference materials or long class logs into structured mock blueprints instantly.</p>
+              <p className="text-xs text-slate-400">Transform textbook reference materials into structured mock questions instantly.</p>
             </div>
             
             <div className="bg-white border border-[#EBE8E0] p-6 rounded-2xl shadow-3xs">
               <h4 className="text-xs font-black text-indigo-600 uppercase mb-3">✨ Core Context Engine</h4>
               <textarea 
-                placeholder="Paste your engineering mathematics notes, formulas list, or syllabus topics string here to build an automated revision layout..." 
+                placeholder="Paste your engineering mathematics notes or syllabus topics here..." 
                 className="w-full min-h-[120px] p-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-sans text-slate-800"
               />
               <button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-colors">
@@ -502,7 +514,7 @@ export default function StudentDashboard() {
           /* 🔖 BOOKMARKS MODULE */
           <section className="space-y-4">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs text-center text-xs text-slate-400 font-bold">
-              📁 Saved bookmarks cluster is currently empty. Star important documents to review them here subsequently.
+              📁 Saved bookmarks cluster is currently empty. Star files to track them here.
             </div>
           </section>
         ) : currentView === "labs" ? (
@@ -512,7 +524,7 @@ export default function StudentDashboard() {
               <h3 className="text-sm font-black text-slate-900 mb-1">
                 Engineering Laboratory Practicals — {selectedLabYear === "1" ? "1st Year Syllabus" : "2nd Year Syllabus"}
               </h3>
-              <p className="text-xs text-slate-400 mb-6">Access procedure guidelines, execution records, structural script configurations, and viva logs.</p>
+              <p className="text-xs text-slate-400 mb-6">Access procedure guidelines, script configurations, and viva logs.</p>
               
               {selectedLabYear === "1" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
