@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PaywallModal } from "../../components/ui/PaywallModal";
 import { subjectBlueprintsRegistry, pastYearPapersRegistry, ExamNightPack } from "../../lib/subjectBlueprints";
+import AiStudyEngine from "../../components/AiStudyEngine";
 
 const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
   "JNTUH": {
@@ -492,24 +493,8 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "ai" ? (
-          /* 🤖 AI STUDY ENGINE MODULE */
-          <section className="space-y-6">
-            <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl border border-slate-800 shadow-sm">
-              <h3 className="text-sm font-black mb-1">AI Study Module Synthesizer</h3>
-              <p className="text-xs text-slate-400">Transform textbook reference materials into structured mock questions instantly.</p>
-            </div>
-            
-            <div className="bg-white border border-[#EBE8E0] p-6 rounded-2xl shadow-3xs">
-              <h4 className="text-xs font-black text-indigo-600 uppercase mb-3">✨ Core Context Engine</h4>
-              <textarea 
-                placeholder="Paste your engineering mathematics notes or syllabus topics here..." 
-                className="w-full min-h-[120px] p-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-sans text-slate-800"
-              />
-              <button className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-colors">
-                Synthesize Key Insights
-              </button>
-            </div>
-          </section>
+          /* 🤖 INTERACTIVE AI STUDY ENGINE MODULE CONTAINER */
+          <AiStudyEngine />
         ) : currentView === "bookmarks" ? (
           /* 🔖 BOOKMARKS MODULE */
           <section className="space-y-4">
