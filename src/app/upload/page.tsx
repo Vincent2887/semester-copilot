@@ -49,7 +49,7 @@ export default function UploadPaper() {
       const stableFileUrl = `${supabaseUrl}/storage/v1/object/public/notes/${filePath}`;
 
       // Send data to our background server worker route instead of Supabase directly
-      const response = await fetch("/api/upload-paper", {
+     const response = await fetch("/api/upload-paper", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

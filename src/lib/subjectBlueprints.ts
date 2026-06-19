@@ -2,55 +2,66 @@ export interface ExamNightPack {
   subjectName: string;
   confidenceScore: number;
   mustStudyQuestions: string[];
-  shortNotes: { topic: string; bulletPoints: string[] }[];
-  mcqs: { question: string; options: string[]; answer: string }[];
+  shortNotes: Array<{ topic: string; bulletPoints: string[] }>;
+  mcqs: Array<{ question: string; answer: string }>;
   vivaQuestions: string[];
 }
 
-export interface PastYearPaper {
-  year: string;
-  examType: string;
-  pdfUrl: string;
-}
-
-// 1. Core Exam Night Pack Definitions
+// 🎯 Predictor Content Matrix for Subject Packs
 export const subjectBlueprintsRegistry: Record<string, Record<string, ExamNightPack>> = {
-  "CSE": {
-    "dbms": {
-      subjectName: "Database Management Systems (DBMS)",
-      confidenceScore: 85,
+  CSE: {
+    dbms: {
+      subjectName: "Database Management Systems",
+      confidenceScore: 94,
       mustStudyQuestions: [
-        "Explain 1NF, 2NF, 3NF, and BCNF with real-world normalization examples.",
-        "Differentiate between Primary Key, Foreign Key, and Candidate Key maps.",
-        "Detail ACID properties and explain why Atomicity is critical during crashes.",
-        "Explain Lock-Based Concurrency Control protocols and Deadlock Prevention.",
-        "Illustrate SQL Joins with syntax (Inner, Left, Right, Full Outer structures)."
+        "Explain 1NF, 2NF, 3NF, and BCNF Functional Dependencies with clear schema mappings.",
+        "Draw a complete E-R Diagram for a University Registry System showing primary keys.",
+        "What is ACID property? Explain Atomicity and Durability implementation checkpoints.",
+        "Detail Conflict Serializability vs View Serializability tracking parameters.",
+        "Compare B-Trees and B+ Trees indexing overhead performance inside storage blocks."
       ],
       shortNotes: [
         {
-          topic: "Normalization Framework",
+          topic: "ACID Properties Definition",
           bulletPoints: [
-            "The process of organizing data to minimize redundancy and dependency.",
-            "Eliminates database insertion, update, and deletion anomalies.",
-            "BCNF is stronger than 3NF and handles overlapping candidate keys."
+            "Atomicity: All operations execute flawlessly or everything rollbacks completely.",
+            "Consistency: Database transforms explicitly from one valid transaction phase to another.",
+            "Isolation: Concurrent execution states remain entirely independent across worker tasks.",
+            "Durability: Committed updates persist dynamically inside physical arrays indefinitely."
+          ]
+        },
+        {
+          topic: "Two-Phase Locking (2PL Protocol)",
+          bulletPoints: [
+            "Growing Phase: Transaction locks assets sequentially; cannot release any existing locks.",
+            "Shrinking Phase: Transaction releases acquired allocation constraints; cannot obtain new slots."
           ]
         }
       ],
-      mcqs: [{ question: "Which normal form explicitly removes partial dependency?", options: ["A. 1NF", "B. 2NF", "C. 3NF", "D. BCNF"], answer: "B. 2NF" }],
-      vivaQuestions: ["What is the difference between a clustered and non-clustered index?"]
+      mcqs: [
+        { question: "Which normal form handles transitive functional dependencies?", answer: "3NF" },
+        { question: "What relational algebraic primitive extracts target tuple properties?", answer: "Projection (π)" }
+      ],
+      vivaQuestions: [
+        "What is the core difference between a clustered and non-clustered database storage structure?",
+        "How do databases prevent structural deadlocks using Wait-Die resource allocation schemas?"
+      ]
     }
   }
 };
 
-// 2. Separate Static Registry for Past Year University Papers 
-export const pastYearPapersRegistry: Record<string, Record<string, PastYearPaper[]>> = {
-  "CSE": {
-    "dbms": [
-      { year: "2025", examType: "Regular End-Semester", pdfUrl: "#" },
-      { year: "2024", examType: "Supplementary Exam", pdfUrl: "#" }
+// 📜 Official University Past Papers Resource Index Registry Map
+export const pastYearPapersRegistry: Record<string, Record<string, Array<{ year: string; pdfUrl: string }>>> = {
+  CSE: {
+    dbms: [
+      { year: "2024", pdfUrl: "#" },
+      { year: "2023", pdfUrl: "#" }
+    ],
+    os: [
+      { year: "2024", pdfUrl: "#" }
     ]
   },
-  "ECE": {},
-  "EEE": {},
-  "IT": {}
+  ECE: {},
+  EEE: {},
+  IT: {}
 };
