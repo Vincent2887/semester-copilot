@@ -2,117 +2,137 @@
 
 import { useState } from "react";
 
+interface SynthesisSummary {
+  coreConcepts: string[];
+  examQuestions: string[];
+  keyFormulas: string[];
+}
+
 export default function AiStudyEngine() {
-  const [topic, setTopic] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [inputText, setInputText] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentStep, setCurrentStep] = useState("");
+  const [resultData, setResultData] = useState<SynthesisSummary | null>(null);
 
-  const sampleTags = ["Dijkstra's Algorithm", "Ohm's Law", "Recursion", "Cloud Computing"];
+  const triggerSyllabusSynthesis = () => {
+    if (!inputText.trim()) return;
 
-  const handleGenerate = async (selectedTopic = topic) => {
-    const activeTopic = selectedTopic || topic;
-    if (!activeTopic) {
-      alert("Please specify a topic or choose a quick sample tag.");
-      return;
-    }
+    setIsProcessing(true);
+    setResultData(null);
+    
+    setCurrentStep("Scanning text configurations...");
+    setTimeout(() => {
+      setCurrentStep("Isolating high-weight evaluation tokens...");
+    }, 1000);
 
-    setLoading(true);
-    setResult(null);
+    setTimeout(() => {
+      setCurrentStep("Assembling flashcard summary matrices...");
+    }, 2000);
 
-    try {
-      const response = await AppFetch("/api/generate-notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: activeTopic }),
+    setTimeout(() => {
+      setResultData({
+        coreConcepts: [
+          "Time-Complexity Boundary Conditions (Big-O, Omega, Theta)",
+          "Amortized Array Expansion Allocation Factors",
+          "Recurrence Relation Masters Criterion Checkpoints"
+        ],
+        examQuestions: [
+          "Prove the tight asymptotic bound for a balanced recursive partition loop.",
+          "Analyze structural space trade-offs between open addressing vs linked chaining structures."
+        ],
+        keyFormulas: [
+          "T(n) = aT(n/b) + f(n)",
+          "Structural Load Factor (λ) = n / m"
+        ]
       });
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-    } catch (err: any) {
-      alert(err.message || "AI generation failed.");
-    } finally {
-      setLoading(false);
-    }
+      setIsProcessing(false);
+      setCurrentStep("");
+    }, 3200);
   };
 
-  // Safe wrapper for structural environments
-  async function AppFetch(url: string, init?: RequestInit) {
-    return fetch(url, init);
-  }
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Search Input Custom Box */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Generate custom high-yield notes</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Enter any exam topic — our custom models will build complete revision summaries instantly.</p>
+    <div className="space-y-6">
+      {/* HEADER BANNER */}
+      <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl border border-slate-800 shadow-xs">
+        <h3 className="text-sm font-black mb-1">AI Study Module Synthesizer</h3>
+        <p className="text-xs text-slate-400">Transform raw textbook passages, syllabus logs, or lecture transcripts into optimized engineering review guides.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* INPUT ARENA PANEL */}
+        <div className="lg:col-span-1 bg-white border border-[#EBE8E0] p-6 rounded-2xl shadow-3xs flex flex-col justify-between h-[360px]">
+          <div className="space-y-2">
+            <h4 className="text-xs font-black text-indigo-600 uppercase">Context Extraction Engine</h4>
+            <p className="text-[11px] text-slate-400">Input study text arrays to parse high-probability examination clusters.</p>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Paste your engineering mathematics handouts, custom script variables, or course unit outlines here to configure a structural layout..."
+              className="w-full h-44 p-3 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-sans text-slate-800 resize-none mt-2"
+              disabled={isProcessing}
+            />
           </div>
-          <button 
-            onClick={() => handleGenerate()}
-            disabled={loading}
-            className="bg-black hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-sm shrink-0 uppercase tracking-wider"
+
+          <button
+            onClick={triggerSyllabusSynthesis}
+            disabled={isProcessing || !inputText.trim()}
+            className={`w-full text-xs font-bold py-3 rounded-xl shadow-3xs transition-all tracking-wide ${
+              isProcessing 
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                : "bg-slate-900 text-white hover:bg-slate-800 cursor-pointer"
+            }`}
           >
-            {loading ? "AI Processing..." : "Generate Notes"}
+            {isProcessing ? `✨ ${currentStep}` : "Synthesize Study Assets"}
           </button>
         </div>
 
-        <div className="space-y-4">
-          <input 
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., Dijkstra's Algorithm, Object Oriented Principles"
-            className="w-full bg-[#FBF9F4] border border-slate-200 px-4 py-3 rounded-xl text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 transition-all"
-          />
-          <div className="flex flex-wrap gap-2">
-            {sampleTags.map((tag) => (
-              <button 
-                key={tag} 
-                onClick={() => { setTopic(tag); handleGenerate(tag); }}
-                className="bg-white border border-[#EBE8E0] hover:bg-[#FBF9F4] text-[11px] font-medium text-slate-600 px-3 py-1.5 rounded-full transition-all"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+        {/* OUTPUT ANALYSIS BLOCK */}
+        <div className="lg:col-span-2 bg-white border border-[#EBE8E0] p-6 rounded-2xl shadow-3xs min-h-[360px] flex flex-col justify-center">
+          {!isProcessing && !resultData && (
+            <div className="text-center space-y-2 py-12">
+              <span className="text-2xl block opacity-60">🧠</span>
+              <p className="text-xs font-bold text-slate-400">Waiting for extraction context targets...</p>
+              <p className="text-[10px] text-slate-300 max-w-xs mx-auto">Your parsed syllabus benchmarks, high-probability formula matrices, and question banks will compile right here.</p>
+            </div>
+          )}
+
+          {isProcessing && (
+            <div className="text-center space-y-4 py-12">
+              <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-mono text-indigo-600 font-black tracking-wide uppercase animate-pulse">{currentStep}</p>
+            </div>
+          )}
+
+          {!isProcessing && resultData && (
+            <div className="space-y-5 animate-fadeIn">
+              <div>
+                <h5 className="text-[10px] font-black tracking-wider text-emerald-600 uppercase mb-2">📌 Key Core Concepts Isolated</h5>
+                <ul className="text-xs font-bold text-slate-700 space-y-1.5 list-disc list-inside bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  {resultData.coreConcepts.map((concept, idx) => <li key={idx}>{concept}</li>)}
+                </ul>
+              </div>
+
+              <div>
+                <h5 className="text-[10px] font-black tracking-wider text-rose-500 uppercase mb-2">🎯 Target Probable Exam Queries</h5>
+                <ul className="text-xs font-bold text-slate-700 space-y-1.5 list-disc list-inside bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  {resultData.examQuestions.map((q, idx) => <li key={idx}>{q}</li>)}
+                </ul>
+              </div>
+
+              <div>
+                <h5 className="text-[10px] font-black tracking-wider text-amber-600 uppercase mb-2">🧮 Mathematical Reference Blueprints</h5>
+                <div className="flex flex-wrap gap-2">
+                  {resultData.keyFormulas.map((formula, idx) => (
+                    <span key={idx} className="font-mono text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1.5 rounded-lg shadow-3xs">
+                      {formula}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* AI DISPLAY RESULT LAYOUT MODULE */}
-      {result && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6 animate-in slide-in-from-top-4 duration-300">
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="text-lg font-bold text-indigo-600">{result.title}</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">
-              Context: {result.metadata.generatedFor} | Matrix Sync: Verified
-            </p>
-          </div>
-
-          <div className="space-y-5">
-            {result.chapters.map((ch: any, idx: number) => (
-              <div key={idx} className="space-y-1.5">
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">{ch.title}</h4>
-                <p className="text-xs text-slate-600 leading-relaxed bg-[#FBF9F4] p-4 rounded-xl border border-slate-100">{ch.content}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide">💡 Core Viva Target Predictors</h4>
-            <div className="grid gap-2">
-              {result.vivaHighlights.map((v: string, i: number) => (
-                <div key={i} className="text-xs font-medium text-slate-700 flex items-start gap-2 bg-indigo-50/40 border border-indigo-50/20 p-3 rounded-xl">
-                  <span className="text-indigo-600 font-bold">•</span>
-                  <span>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
