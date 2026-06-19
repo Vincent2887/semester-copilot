@@ -213,7 +213,8 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleGeneratePredictivePack = (subjectKey: string) => {
+  // WIRED TO PRODUCTION BACKEND PIPELINE API ROUTE
+  const handleGeneratePredictivePack = async (subjectKey: string) => {
     if (userPlan === "Free" && availableCredits < 5) {
       setIsPaywallOpen(true);
       return;
@@ -221,28 +222,61 @@ export default function StudentDashboard() {
 
     setSelectedSubjectKey(subjectKey);
     setGeneratingPack(true);
+    
+    // Status Tickers
     setGenerationStatus("Analyzing previous JNTUH query logs...");
-    
-    setTimeout(() => {
-      setGenerationStatus("Parsing R22 regulation unit core matrices...");
-    }, 800);
+    const t1 = setTimeout(() => setGenerationStatus("Parsing R22 regulation unit core matrices..."), 800);
+    const t2 = setTimeout(() => setGenerationStatus("Synthesizing high-probability formula clusters..."), 1500);
 
-    setTimeout(() => {
-      setGenerationStatus("Synthesizing high-probability formula clusters...");
-    }, 1600);
-    
-    setTimeout(() => {
-      const lookupPack = subjectBlueprintsRegistry["CSE"]?.[subjectKey];
-      if (lookupPack) {
-        if (userPlan === "Free") {
-          setAvailableCredits(prev => prev - 5);
-        }
-        setActivePackData(lookupPack);
-        setCurrentView("examNight");
+    try {
+      const response = await fetch("/api/exam-pack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "v1-vincent-test-uid-887",
+          university: selectedUniv || "JNTUH",
+          subject: subjectKey === "dbms" ? "Database Management Systems" : subjectKey.toUpperCase(),
+          branch: selectedBranch || "CSE"
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Generation error encountered.");
       }
+
+      // Check if fallback array registry map lookup is needed
+      if (result.data) {
+        setActivePackData(result.data);
+      } else {
+        const fallbackPack = subjectBlueprintsRegistry[selectedBranch || "CSE"]?.[subjectKey];
+        if (fallbackPack) setActivePackData(fallbackPack);
+      }
+
+      // Deduct balance locally if current plan tier is free
+      if (userPlan === "Free") {
+        setAvailableCredits(result.remainingCredits !== undefined ? result.remainingCredits : (prev => prev - 5));
+      }
+
+      setCurrentView("examNight");
+
+    } catch (err: any) {
+      console.warn("Backend unavailable, using local lookup backup blueprints.");
+      const fallbackPack = subjectBlueprintsRegistry[selectedBranch || "CSE"]?.[subjectKey];
+      if (fallbackPack) {
+        if (userPlan === "Free") setAvailableCredits(prev => prev - 5);
+        setActivePackData(fallbackPack);
+        setCurrentView("examNight");
+      } else {
+        alert(err.message || "Could not synthesize exam night assets.");
+      }
+    } finally {
+      clearTimeout(t1);
+      clearTimeout(t2);
       setGeneratingPack(false);
       setGenerationStatus("");
-    }, 2400);
+    }
   };
 
   const resetCascadeFilter = () => {
@@ -534,7 +568,6 @@ export default function StudentDashboard() {
                     <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
                   </div>
                 </div>
-
               </div>
             </div>
           </section>
