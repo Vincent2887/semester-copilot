@@ -1,55 +1,66 @@
 "use client";
 
 import { useState } from "react";
-
-const universitiesData: Record<string, string[]> = {
-  "JNTUH": [
-    "VNR VJIET (Vallurupalli Nageswara Rao Vignana Jyothi Institute of Engineering and Technology)",
-    "CBIT (Chaitanya Bharathi Institute of Technology)",
-    "MGIT (Mahatma Gandhi Institute of Technology)",
-    "GRIET (Gokaraju Rangaraju Institute of Engineering and Technology)",
-    "JNTUH College of Engineering, Hyderabad"
-  ],
-  "Osmania University (OU)": [
-    "OU College of Engineering (Autonomous)",
-    "Vasavi College of Engineering",
-    "MVSR Engineering College"
-  ]
-};
-
-const branches = ["CSE", "ECE", "EEE", "IT", "MECH", "CIVIL"];
-const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
-const examTypes = ["Mid", "End"];
+import { useRouter } from "next/navigation";
 
 export default function UploadPaper() {
-  const [title, setTitle] = useState("");
-  const [university, setUniversity] = useState("");
-  const [college, setCollege] = useState("");
-  const [branch, setBranch] = useState("");
-  const [year, setYear] = useState("");
-  const [examType, setExamType] = useState("");
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [university, setUniversity] = useState("JNTUH");
+  const [college, setCollege] = useState("");
+  const [branch, setBranch] = useState("CSE");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleFileSelectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleExecuteCloudUploadPipeline = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !university || !college || !branch || !title) {
-      alert("Please fill out all fields.");
+    if (!file || !title.trim() || !college.trim()) {
+      setUploadMessage("Please complete all required fields.");
       return;
     }
 
-    setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${university}/${branch}/${fileName}`;
+      setIsUploading(true);
+      setUploadMessage("Initiating secure asset connection...");
 
-      // Set up predictable public URL fallback path structure
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bebjimuixqbsmzlnvfey.supabase.co";
-      const stableFileUrl = `${supabaseUrl}/storage/v1/object/public/notes/${filePath}`;
+      // 1. Initialize custom unique file path identifiers
+      const fileExtension = file.name.split(".").pop();
+      const uniquePathToken = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const storageBucketPath = `${branch.toLowerCase()}/${uniquePathToken}.${fileExtension}`;
 
-      // Send data to our background server worker route instead of Supabase directly
-     const response = await fetch("/api/upload-paper", { 
+      // 2. Import core Supabase token client dynamically
+      const { supabase } = await import("../../lib/supabase");
+
+      setUploadMessage("Streaming document blob directly to Supabase storage bucket...");
+      
+      // 3. Stream document binary payload into the 'notes' asset bucket container
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from("notes")
+        .upload(storageBucketPath, file, {
+          cacheControl: "3600",
+          upsert: false
+        });
+
+      if (storageError) throw new Error(`Bucket upload faulted: ${storageError.message}`);
+
+      // 4. Retrieve the public CDN uniform resource locator matching the item path
+      const { data: linkData } = supabase.storage
+        .from("notes")
+        .getPublicUrl(storageBucketPath);
+
+      const resolvedPublicUrl = linkData.publicUrl;
+
+      setUploadMessage("Cataloging document structural metadata rows in database tables...");
+
+      // 5. Submit database row records via our server router verification gate
+      const databasePayloadResult = await fetch("/api/upload-paper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -57,159 +68,127 @@ export default function UploadPaper() {
           university,
           college,
           branch,
-          year,
-          examType,
-          fileUrl: stableFileUrl
+          file_url: resolvedPublicUrl
         })
       });
 
-      const result = await response.json();
+      const responseJsonData = await databasePayloadResult.json();
 
-      if (!result.success) {
-        throw new Error(result.error || "Backend compilation failure");
+      if (!databasePayloadResult.ok || !responseJsonData.success) {
+        throw new Error(responseJsonData.message || "Failed to commit database metadata entry.");
       }
 
-      alert("🎉 Paper successfully uploaded and indexed automatically!");
-      setTitle("");
-      setFile(null);
-    } catch (err: any) {
-      console.error(err);
-      alert(`Pipeline Handled Successfully!\nRecord mapped directly to dashboard schema framework.`);
+      setUploadMessage("Upload sequence completed successfully! Redirecting...");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+
+    } catch (pipelineError: any) {
+      console.error("Cloud processing pipeline dropped context handles:", pipelineError);
+      setUploadMessage(`Pipeline Interrupt: ${pipelineError.message}`);
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#060814] text-slate-100 p-4 md:p-8 flex flex-col justify-center items-center font-sans antialiased">
-      <div className="max-w-lg w-full mb-4 flex justify-start">
-        <a href="/dashboard" className="text-xs font-semibold text-slate-400 hover:text-indigo-400 transition-colors">
-          ← Return to Student Dashboard
-        </a>
-      </div>
-
-      <div className="bg-[#0a0d1d]/90 backdrop-blur-xl border border-slate-900 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl max-w-lg w-full space-y-6">
+    <div className="min-h-screen bg-[#F4F1E8] p-6 sm:p-10 text-slate-800 font-sans antialiased flex items-center justify-center">
+      <div className="w-full max-w-lg bg-white border border-[#EBE8E0] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        
         <div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-2">
-            Secure Server Pipeline Node
-          </span>
-          <h2 className="text-xl font-bold tracking-tight text-white">Index New Past Material</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Upload a raw PDF reference file. Database URL properties will resolve automatically.</p>
+          <h2 className="text-xl font-black tracking-tight text-slate-900">Academic Asset Uploader</h2>
+          <p className="text-xs text-slate-400 mt-1">Distribute authenticated previous papers or lecture material grids to the shared campus registry network.</p>
         </div>
 
-        <form onSubmit={handleUpload} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Paper Title</label>
+        <form onSubmit={handleExecuteCloudUploadPipeline} className="space-y-4 text-xs font-bold text-slate-700">
+          
+          <div className="space-y-1.5">
+            <label className="block text-slate-500">Document Title / Resource Heading</label>
             <input 
               type="text" 
-              value={title} 
-              required
+              value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Discrete Mathematics" 
-              className="w-full bg-[#0d1127] border border-slate-900 px-4 py-2.5 rounded-xl text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500/50 transition-all"
+              placeholder="e.g., Database Management Systems Unit 1 Handout"
+              className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 font-medium"
+              required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">University</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-slate-500">Target University Network</label>
               <select 
-                value={university} 
-                required
-                onChange={(e) => { setUniversity(e.target.value); setCollege(""); }}
-                className="w-full bg-[#0d1127] border border-slate-900 px-3 py-2.5 rounded-xl text-xs text-slate-300 outline-none cursor-pointer"
+                value={university}
+                onChange={(e) => setUniversity(e.target.value)}
+                className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-400"
               >
-                <option value="">Select</option>
-                {Object.keys(universitiesData).map(univ => (
-                  <option key={univ} value={univ}>{univ}</option>
-                ))}
+                <option value="JNTUH">JNTUH</option>
+                <option value="Osmania University (OU)">Osmania University (OU)</option>
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Branch</label>
+            <div className="space-y-1.5">
+              <label className="block text-slate-500">Academic Branch Tag</label>
               <select 
-                value={branch} 
-                required
+                value={branch}
                 onChange={(e) => setBranch(e.target.value)}
-                className="w-full bg-[#0d1127] border border-slate-900 px-3 py-2.5 rounded-xl text-xs text-slate-300 outline-none cursor-pointer"
+                className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-slate-400"
               >
-                <option value="">Select</option>
-                {branches.map(br => (
-                  <option key={br} value={br}>{br}</option>
-                ))}
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="EEE">EEE</option>
+                <option value="IT">IT</option>
               </select>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">College Campus</label>
-            <select 
-              value={college} 
-              required
-              disabled={!university}
-              onChange={(e) => setCollege(e.target.value)}
-              className="w-full bg-[#0d1127] border border-slate-900 px-3 py-2.5 rounded-xl text-xs text-slate-300 outline-none cursor-pointer disabled:opacity-30"
-            >
-              <option value="">Select Campus</option>
-              {university && universitiesData[university].map(clg => (
-                <option key={clg} value={clg}>{clg}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Year</label>
-              <select 
-                value={year} 
-                required
-                onChange={(e) => setYear(e.target.value)}
-                className="w-full bg-[#0d1127] border border-slate-900 px-3 py-2.5 rounded-xl text-xs text-slate-300 outline-none cursor-pointer"
-              >
-                <option value="">Select</option>
-                {years.map(yr => (
-                  <option key={yr} value={yr}>{yr}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Exam Term</label>
-              <select 
-                value={examType} 
-                required
-                onChange={(e) => setExamType(e.target.value)}
-                className="w-full bg-[#0d1127] border border-slate-900 px-3 py-2.5 rounded-xl text-xs text-slate-300 outline-none cursor-pointer"
-              >
-                <option value="">Select</option>
-                {examTypes.map(type => (
-                  <option key={type} value={type}>{type === "Mid" ? "Midterm" : "End-Semester"}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-1 pt-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1">Choose PDF File Source</label>
+          <div className="space-y-1.5">
+            <label className="block text-slate-500">Affiliated College Name String</label>
             <input 
-              type="file" 
+              type="text" 
+              value={college}
+              onChange={(e) => setCollege(e.target.value)}
+              placeholder="e.g., VNR Vignana Jyothi Institute"
+              className="w-full p-3 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 font-medium"
               required
-              accept="application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border file:border-slate-800 file:text-xs file:font-semibold file:bg-slate-900 file:text-slate-300 hover:file:bg-slate-800 cursor-pointer w-full text-slate-500"
             />
           </div>
+
+          <div className="space-y-1.5 pt-2">
+            <label className="block text-slate-500">Attach Reference Binary Payload (PDF / DOCX)</label>
+            <div className="border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-xl p-5 text-center bg-slate-50/50 transition cursor-pointer relative">
+              <input 
+                type="file" 
+                accept=".pdf,.docx"
+                onChange={handleFileSelectionChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                disabled={isUploading}
+              />
+              <span className="text-lg block mb-1">📁</span>
+              <p className="text-[11px] font-bold text-slate-600">
+                {file ? `Selected Asset: ${file.name}` : "Click here or drop your files to assign asset values"}
+              </p>
+            </div>
+          </div>
+
+          {uploadMessage && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px] text-indigo-600">
+              ⚡ Status: {uploadMessage}
+            </div>
+          )}
 
           <button 
             type="submit" 
-            disabled={uploading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-xl transition disabled:opacity-50 mt-4 uppercase tracking-wider shadow-lg shadow-indigo-600/10 cursor-pointer"
+            disabled={isUploading}
+            className={`w-full py-3.5 rounded-xl text-white font-black tracking-wide transition-all uppercase shadow-2xs mt-2 ${
+              isUploading ? "bg-slate-300 cursor-not-allowed" : "bg-slate-900 hover:bg-slate-800 cursor-pointer"
+            }`}
           >
-            {uploading ? "Processing with Server Node..." : "Commit Asset to Database"}
+            {isUploading ? "Pipeline Active..." : "Commit Document Payload"}
           </button>
         </form>
+
       </div>
-    </main>
+    </div>
   );
 }
