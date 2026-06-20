@@ -394,6 +394,8 @@ export default function StudentDashboard() {
     }
   };
 
+  const currentCompanyFiles = companyDocuments[selectedCompany] || {};
+
   return (
     <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
       cramMode ? "bg-[#120A0A] text-[#F5EBEB]" : "bg-[#F4F1E8] text-slate-800"
@@ -613,36 +615,10 @@ export default function StudentDashboard() {
                 <div>
                   <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
                   <p className="text-xs text-slate-400 mb-4">Contribute curriculum materials, handouts, or reference packets to the student registry.</p>
-                  
                   <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer group">
                     <span className="text-xl block mb-1 group-hover:scale-110 transition-transform">📤</span>
                     <p className="text-[11px] font-bold text-slate-700">Drag & drop files or click to browse</p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">Accepts PDF, DOCX up to 50MB</p>
                     <input type="file" className="hidden" id="workspace-upload-input" />
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-bold">
-                  <span>Server Registry Connection:</span>
-                  <span className="text-emerald-600 uppercase">● Live Synced</span>
-                </div>
-              </div>
-
-              <div className="lg:col-span-2 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900">Department Shared Resources</h3>
-                    <p className="text-xs text-slate-400">Review community-verified study resources indexed across your batch.</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
-                    <div>
-                      <span className="text-xs font-black text-slate-800 block">Vector Calculus Formula Matrix (Unit 1-3)</span>
-                      <span className="text-[10px] text-slate-400 font-bold block mt-0.5">PDF Document • 4.2 MB • Added yesterday</span>
-                    </div>
-                    <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
                   </div>
                 </div>
               </div>
@@ -654,20 +630,13 @@ export default function StudentDashboard() {
           <section className="space-y-6 w-full">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
               <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
-              <p className="text-xs text-slate-400 mb-6">Review your pinned university assets and saved documentation files.</p>
-              
               {bookmarkedPaperIds.length === 0 ? (
-                <div className="text-center py-12 text-xs text-slate-400 font-bold">
-                  📁 Your saved bookmarks collection is currently empty. Click the star button on any study material or paper to pin it here.
-                </div>
+                <div className="text-center py-12 text-xs text-slate-400 font-bold">📁 Your saved bookmarks collection is empty.</div>
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                   {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
                     <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
-                      <div className="flex justify-between items-start gap-2">
-                        <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
-                        <button onClick={() => handleToggleBookmarkAsset(paper.id)} className="text-xs text-red-400 hover:text-red-600 cursor-pointer font-bold uppercase tracking-wider text-[10px]">Remove</button>
-                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
                       <a href={paper.file_url} target="_blank" rel="noreferrer" className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
                     </div>
                   ))}
@@ -678,23 +647,10 @@ export default function StudentDashboard() {
         ) : currentView === "labs" ? (
           <section className="space-y-6 w-full">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
-              <h3 className="text-sm font-black text-slate-900 mb-1">
-                Engineering Laboratory Practicals — {selectedLabYear === "1" ? "1st Year Syllabus" : "2nd Year Syllabus"}
-              </h3>
-              
-              {selectedLabYear === "1" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                  <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
-                    <span className="text-xs font-black text-slate-800 block">🔌 Basic Electrical Engineering Lab (BEE)</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                  <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
-                    <span className="text-xs font-black text-slate-800 block">💻 Computer Oriented Statistical Methods Lab (COSM)</span>
-                  </div>
-                </div>
-              )}
+              <h3 className="text-sm font-black text-slate-900 mb-1">Laboratory Practicals — {selectedLabYear === "1" ? "1st Year" : "2nd Year"}</h3>
+              <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] cursor-pointer">
+                <span className="text-xs font-black text-slate-800 block">🔌 Core Laboratory Practicals Module Mapping Node</span>
+              </div>
             </div>
           </section>
         ) : currentView === "placement" ? (
@@ -702,51 +658,38 @@ export default function StudentDashboard() {
           <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
-              
-              <div className="mb-6">
-                <h3 className="text-base font-black tracking-wide text-white">Company-Specific Placement Blueprints</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Select a corporate alignment track to query custom aptitude metrics, technical interview logs, and verification roadmaps.
-                </p>
-              </div>
-              
               <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
                 {placementCategories.map((cat) => (
                   <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`px-4 py-2.5 rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${activeCategoryKey === cat.id ? "bg-indigo-600 text-white border-indigo-500 shadow-md" : "bg-slate-900/40 text-slate-400 border-slate-800/60"}`}>
-                    <span>{cat.icon}</span>
                     <span>{cat.name}</span>
                   </button>
                 ))}
               </div>
-
-              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full max-h-[140px] overflow-y-auto pr-1">
-                {placementRegistry[activeCategoryKey]?.map((companyName) => (
-                  <button key={companyName} onClick={() => setSelectedCompany(companyName)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${selectedCompany === companyName ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400 border-slate-800"}`}>
-                    🏢 {companyName}
+              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
+                {placementRegistry[activeCategoryKey]?.map((name) => (
+                  <button key={name} onClick={() => setSelectedCompany(name)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${selectedCompany === name ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400 border-slate-800"}`}>
+                    🏢 {name}
                   </button>
                 ))}
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
                   <h4 className="text-[10px] font-black text-purple-400 uppercase">🧮 1. Aptitude & Logic</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.aptitudeName || `Store files for ${selectedCompany}`}</p>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.aptitudeName || "Empty File Buffer Slot"}</p>
                   <button onClick={() => triggerPdfFileInput("aptitude")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
                     {currentCompanyFiles.aptitudeUrl ? "📄 View Document" : "➕ Upload Aptitude PDF"}
                   </button>
                 </div>
-
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
                   <h4 className="text-[10px] font-black text-indigo-400 uppercase">💻 2. Technical & Coding</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.technicalName || `Store tech questions for ${selectedCompany}`}</p>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.technicalName || "Empty File Buffer Slot"}</p>
                   <button onClick={() => triggerPdfFileInput("technical")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
                     {currentCompanyFiles.technicalUrl ? "📄 View Document" : "➕ Upload Technical PDF"}
                   </button>
                 </div>
-
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
                   <h4 className="text-[10px] font-black text-emerald-400 uppercase">🤝 3. HR & Behavioral</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.hrName || `Store HR behavioral notes for ${selectedCompany}`}</p>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.hrName || "Empty File Buffer Slot"}</p>
                   <button onClick={() => triggerPdfFileInput("hr")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
                     {currentCompanyFiles.hrUrl ? "📄 View Document" : "➕ Upload HR PDF"}
                   </button>
@@ -755,27 +698,21 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "screener" ? (
-          /* 🔥 PREMIUM INTEGRATED AI SCREENER SECTOR */
+          /* 🔥 PREMIUM INTEGRATED AI SCREENER SECTOR WORKSPACE */
           <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
-              
               <div className="mb-6">
                 <h3 className="text-base font-black tracking-wide text-white">AI Resume Screener & ATS Analyzer Channel</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Upload an academic or project resume directly into the terminal stream to test syntax verification and algorithmic keywords compliance indexes.
-                </p>
+                <p className="text-xs text-slate-400 mt-1">Upload an academic or project resume directly into the terminal stream to test keywords compliance indexes.</p>
               </div>
-
               <input type="file" ref={screenerFileRef} onChange={(e) => { if(e.target.files?.[0]) setScreenerFile(e.target.files[0]); }} accept="application/pdf" className="hidden" />
-
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start w-full">
                 <div className="space-y-5 w-full">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">1. Target Position Requirements matrix</label>
-                    <textarea value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste target framework profiles or descriptors here (e.g., Python, Flask, OpenCV, Data Structures)..." className="w-full h-44 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 resize-none placeholder-slate-700 font-medium" />
+                    <textarea value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste target framework profiles or descriptors here (e.g., Python, Flask, OpenCV, Data Structures)..." className="w-full h-44 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs focus:outline-none focus:border-indigo-500 resize-none font-medium text-slate-200" />
                   </div>
-
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">2. Attacher Portfolio Document</label>
                     <div onClick={() => screenerFileRef.current?.click()} className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-8 text-center bg-slate-950/20 cursor-pointer transition-all">
@@ -783,15 +720,13 @@ export default function StudentDashboard() {
                       <p className="text-xs font-black text-slate-300">{screenerFile ? screenerFile.name : "Drag & drop resume PDF or click to browse files"}</p>
                     </div>
                   </div>
-
-                  <button onClick={handleScreenResumeRequest} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg">
+                  <button onClick={handleScreenResumeRequest} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg cursor-pointer">
                     🔍 Execute Structural Match Profile
                   </button>
                 </div>
-
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/90 min-h-[420px] flex flex-col justify-between w-full">
                   {!screenerResults ? (
-                    <div className="flex flex-col items-center justify-center text-center h-full my-auto text-slate-500 space-y-2">
+                    <div className="flex flex-col items-center justify-center text-center h-full my-auto text-slate-500">
                       <p className="text-xs font-black text-slate-400">Awaiting Analysis Parameters</p>
                     </div>
                   ) : (
@@ -800,17 +735,29 @@ export default function StudentDashboard() {
                         <h4 className="text-sm font-black text-white">Assessment Index Ledger</h4>
                         <span className="text-2xl font-black text-emerald-400">{screenerResults.score}%</span>
                       </div>
-                      <div className="mt-4 p-4 bg-slate-950/40 rounded-xl border border-slate-800/40 text-xs text-slate-300 font-medium">
-                        {screenerResults.summary}
-                      </div>
+                      <div className="mt-4 p-4 bg-slate-950/40 rounded-xl border border-slate-800/40 text-xs text-slate-300 font-medium">{screenerResults.summary}</div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                         <div className="space-y-2">
                           <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider block">✅ Core Compliance Vectors Unlocked</span>
-                          <div className="flex flex-wrap gap-1">{screenerResults.matchedKeywords.map((tag: string, index: number) => <span key={index} className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-md">{tag}</span>)}</div>
+                          <div className="flex flex-wrap gap-1">
+                            {/* 🛠️ Fixed loops: mapping to local parameter argument 'idx' directly */}
+                            {screenerResults.matchedKeywords.map((tag: string, idx: number) => (
+                              <span key={idx} className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-md">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <span className="text-[9px] font-black text-red-400 uppercase tracking-wider block">❌ Identified Gaps & Deviations</span>
-                          <div className="flex flex-wrap gap-1">{screenerResults.missingKeywords.map((tag: string, index: number) => <span key={index} className="text-[10px] font-black bg-red-500/10 text-red-400 px-2 py-0.5 rounded-md">{tag}</span>)}</div>
+                          <div className="flex flex-wrap gap-1">
+                            {/* 🛠️ Fixed loops: mapping to local parameter argument 'idx' directly */}
+                            {screenerResults.missingKeywords.map((tag: string, idx: number) => (
+                              <span key={idx} className="text-[10px] font-black bg-red-500/10 text-red-400 px-2 py-0.5 rounded-md">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
