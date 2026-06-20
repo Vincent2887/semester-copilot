@@ -95,7 +95,6 @@ const engineeringBranches = [
   { id: "IT", name: "Information Technology", icon: "🌐" }
 ];
 
-// 🚀 REFACTORED CORE STREAMLINED CATEGORIES
 const placementCategories = [
   { id: "dream", name: "🎯 Top Dream Companies", icon: "⭐" },
   { id: "product", name: "📱 Product-Based MNCs", icon: "🚀" },
@@ -325,34 +324,53 @@ export default function StudentDashboard() {
     }
   };
 
-  const handlePdfUploadMapping = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // HANDLES THE SECURE UPLOAD TRANSMISSION STRAIGH TO SUPABASE CLOUD VIA API
+  const handlePdfUploadMapping = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeUploadTarget) return;
 
-    const dummyBlobUrl = URL.createObjectURL(file);
-    
-    setCompanyDocuments(prev => {
-      const existingData = prev[selectedCompany] || {};
-      return {
-        ...prev,
-        [selectedCompany]: {
-          ...existingData,
-          [`${activeUploadTarget}Url`]: dummyBlobUrl,
-          [`${activeUploadTarget}Name`]: file.name
-        }
-      };
-    });
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+    uploadFormData.append("company", selectedCompany);
+    uploadFormData.append("roundType", activeUploadTarget);
 
-    setActiveUploadTarget(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    try {
+      setLoading(true);
+      
+      const response = await fetch("/api/placement-upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Upload pipeline failed.");
+
+      // Maps file details and URL strings to appropriate properties directly
+      setCompanyDocuments(prev => {
+        const existingData = prev[selectedCompany] || {};
+        return {
+          ...prev,
+          [selectedCompany]: {
+            ...existingData,
+            [`${activeUploadTarget}Url`]: result.publicUrl,
+            [`${activeUploadTarget}Name`]: result.fileName
+          }
+        };
+      });
+
+    } catch (err: any) {
+      alert(err.message || "Failed to parse attachment logic.");
+    } finally {
+      setLoading(false);
+      setActiveUploadTarget(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const currentCompanyFiles = companyDocuments[selectedCompany] || {};
 
   return (
-    <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
-      cramMode ? "bg-[#120A0A] text-[#F5EBEB]" : "bg-[#F4F1E8] text-slate-800"
-    }`}>
+    <div className="min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500">
       
       <PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} cramMode={cramMode} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(email) => setActiveUserEmail(email)} />
@@ -777,7 +795,7 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 PREMIUM REFACTORED SECURE PLACEMENT EDGE COMPLIANT WITH image_a2e06d.jpg */
+          /* 🔥 ADVANCED PRO-LEVEL SECTOR INTERFACE FOR CORPORATE BLUEPRINTS */
           <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
@@ -819,7 +837,7 @@ export default function StudentDashboard() {
                         : "bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
                     }`}
                   >
-                    💼 {companyName}
+                    🏢 {companyName}
                   </button>
                 ))}
               </div>
@@ -955,6 +973,6 @@ export default function StudentDashboard() {
           <div className="border p-8 rounded-3xl text-center text-xs text-slate-400 bg-white border-[#EBE8E0]">Workspace tracking cluster active.</div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
