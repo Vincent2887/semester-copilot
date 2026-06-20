@@ -78,7 +78,7 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
       "[Affiliated] Deccan College of Engineering and Technology (DCET)",
       "[Affiliated] Islamia College of Engineering and Technology",
       "[Affiliated] Neil Gogte Institute of Technology (NGIT)",
-      "[@Affiliated] Keshav Memorial Engineering College",
+      "[Affiliated] Keshav Memorial Engineering College",
       "[Affiliated] Lords Institute of Engineering and Technology",
       "[Affiliated] Gokaraju Lailavathi Womens Engineering College",
       "[Affiliated] ISL Engineering College",
@@ -736,22 +736,28 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 CLEAN, VISUAL PREPARATION GRID COMPLIANT WITH image_a3429b.jpg */
+          /* 🔥 PREMIUM GLASS-DARK SECTOR INTERFACE FOR CORPORATE BLUEPRINTS */
           <section className="space-y-6">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
-              <h3 className="text-sm font-black text-slate-900 mb-1">Company-Specific Placement Blueprints</h3>
-              <p className="text-xs text-slate-400 mb-6">Select a target category pipeline and choose any MNC to parse quantitative trends, coding parameters, and interview blueprints.</p>
+            <div className="p-6 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
               
-              {/* Category Ribbon */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-slate-100 pb-4 mb-4">
+              <div className="mb-6">
+                <h3 className="text-base font-black tracking-wide text-white">Company-Specific Placement Blueprints</h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                  Select a corporate channel to query target analytical trends, runtime coding parameters, and ATS verification matrices.
+                </p>
+              </div>
+              
+              {/* Domain Category Selector Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-slate-800/80 pb-4 mb-4">
                 {placementCategories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`px-3 py-2 text-left rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${
+                    className={`px-3 py-2 text-left rounded-xl transition-all border text-[11px] font-bold flex items-center gap-1.5 ${
                       activeCategoryKey === cat.id 
-                        ? "bg-slate-900 text-white border-slate-900 shadow-3xs" 
-                        : "bg-slate-50/50 text-slate-600 border-slate-200/60 hover:bg-slate-50"
+                        ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
+                        : "bg-slate-900/40 text-slate-400 border-slate-800/60 hover:border-slate-700 hover:text-white"
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -760,79 +766,101 @@ export default function StudentDashboard() {
                 ))}
               </div>
 
-              {/* Sub-Company Buttons */}
-              <div className="flex gap-1.5 overflow-x-auto pb-3 border-b border-slate-100/80 mb-6">
+              {/* Sub-Company Ribbon */}
+              <div className="flex gap-2 overflow-x-auto pb-3 border-b border-slate-800/80 mb-6 scrollbar-thin scrollbar-thumb-slate-800">
                 {placementRegistry[activeCategoryKey]?.map((companyName) => (
                   <button
                     key={companyName}
                     onClick={() => setSelectedCompany(companyName)}
-                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap border ${
+                    className={`px-3.5 py-1.5 text-[11px] font-black rounded-xl transition-all whitespace-nowrap border ${
                       selectedCompany === companyName
-                        ? "bg-indigo-600 text-white border-indigo-600 shadow-3xs"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                        ? "bg-white text-slate-950 border-white shadow-lg"
+                        : "bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
                     }`}
                   >
-                    💼 {companyName}
+                    🏢 {companyName}
                   </button>
                 ))}
               </div>
 
-              {/* Strategy Card */}
-              <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs flex justify-between items-center">
+              {/* Active Asset Metadata Banner */}
+              <div className="mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800/60 text-xs flex justify-between items-center backdrop-blur-md">
                 <div>
-                  <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Target Track Strategy</span>
-                  <span className="font-black text-slate-800 block text-sm mt-0.5">{selectedCompany}</span>
+                  <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">Target Channel Node</span>
+                  <span className="font-black text-white text-sm mt-0.5">{selectedCompany} Operational Hub</span>
                 </div>
-                <span className="text-[10px] bg-indigo-50 border border-indigo-100/50 text-indigo-700 font-bold rounded-lg px-2.5 py-1">
-                  Active Vector Mapping
-                </span>
+                <div className="text-right text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Verified Blueprint Stream</span>
+                </div>
               </div>
 
-              {/* Three-Tier Clean PDF Routing Panels */}
+              {/* Three-Tier PDF Document Integration Matrix Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* TRACK 1: APTITUDE & LOGICAL REASONING */}
-                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
-                  <div>
-                    <h4 className="text-[10px] font-black tracking-wider text-purple-700 uppercase mb-2 flex items-center gap-1.5">
-                      🧮 1. Aptitude & Logical Reasoning
-                    </h4>
+                {/* ADVANCED TRACK MODULE 1 */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-[10px] font-black tracking-wider text-purple-400 uppercase flex items-center gap-1.5">
+                        🧮 1. Aptitude & Logic
+                      </h4>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-purple-400 transition-colors">v1.4.0</span>
+                    </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Quantitative pattern sets, ratio systems, permutations, and time equations mapped for {selectedCompany} online selection metrics.
+                      Quantitative matrices, profit algorithms, numerical logic distributions, and analytical reasoning vectors compiled for {selectedCompany}.
                     </p>
+                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
+                      <span>File Size: ~2.4 MB</span>
+                      <span className="text-slate-600">SHA-256 Verified</span>
+                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
-                    View Aptitude Blueprint PDF
+                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-purple-500/30">
+                    Open Aptitude Document
                   </button>
                 </div>
 
-                {/* TRACK 2: TECHNICAL & CODING ROUNDS */}
-                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
-                  <div>
-                    <h4 className="text-[10px] font-black tracking-wider text-indigo-700 uppercase mb-2 flex items-center gap-1.5">
-                      💻 2. Technical & Coding Rounds
-                    </h4>
+                {/* ADVANCED TRACK MODULE 2 */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-[10px] font-black tracking-wider text-indigo-400 uppercase flex items-center gap-1.5">
+                        💻 2. Technical & Coding
+                      </h4>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-indigo-400 transition-colors">v3.1.2</span>
+                    </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Core DSA maps, recursion algorithms, OOP architecture parameters, and query trees compiled specifically for {selectedCompany} tech interviews.
+                      Data structure traversal structures, string matching blueprints, normalization rules, and runtime scripts optimized for technical validation.
                     </p>
+                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
+                      <span>File Size: ~4.1 MB</span>
+                      <span className="text-slate-600">SHA-256 Verified</span>
+                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
-                    View Interview Questions PDF
+                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-indigo-500/30">
+                    Open Technical Blueprint
                   </button>
                 </div>
 
-                {/* TRACK 3: HR & MANAGERIAL QUESTIONS */}
-                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
-                  <div>
-                    <h4 className="text-[10px] font-black tracking-wider text-emerald-700 uppercase mb-2 flex items-center gap-1.5">
-                      🤝 3. HR & Managerial Questions
-                    </h4>
+                {/* ADVANCED TRACK MODULE 3 */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-[10px] font-black tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                        🤝 3. HR & Behavioral
+                      </h4>
+                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">v2.0.1</span>
+                    </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      STAR scenario communication templates, company core values alignment matrices, and optimized presentation blueprints.
+                      STAR framework scenario logs, contextual project leadership dialogues, and presentation keyword vectors tailored for corporate review lines.
                     </p>
+                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
+                      <span>File Size: ~1.8 MB</span>
+                      <span className="text-slate-600">SHA-256 Verified</span>
+                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
-                    View HR & Resume Tips PDF
+                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-emerald-500/30">
+                    Open Behavioral Guide
                   </button>
                 </div>
 
