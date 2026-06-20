@@ -117,7 +117,6 @@ interface CompanyFiles {
 }
 
 export default function StudentDashboard() {
-  // Added 'screener' type track into the primary navigation array
   const [currentView, setCurrentView] = useState<"papers" | "workspace" | "ai" | "bookmarks" | "examNight" | "labs" | "placement" | "screener">("papers");
   const [paperTabMode, setPaperTabMode] = useState<"notes" | "pyqs">("notes");
   const [cramMode, setCramMode] = useState(false);
@@ -177,8 +176,7 @@ export default function StudentDashboard() {
           setAvailableCredits(profile.credits);
         }
       } catch (syncError) {
-      
-console.warn("Operating profile dashboard in safe fallback/local mode.");
+        console.warn("Operating profile dashboard in safe fallback/local mode.");
       }
     }
     syncDatabaseProfile();
@@ -365,7 +363,6 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
     }
   };
 
-  // AI Screener Transmission Handling Fetch Pipeline
   const handleScreenResumeRequest = async () => {
     if (!screenerFile || !jobDescription) {
       alert("Please upload a resume PDF file and add a description string matrix.");
@@ -378,7 +375,6 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
     uploadFormData.append("job_description", jobDescription);
 
     try {
-      // Connects to your running Python Flask local backend sandbox
       const response = await fetch("http://127.0.0.1:5000/api/screen-resume", {
         method: "POST",
         body: uploadFormData,
@@ -387,7 +383,6 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
       if (!response.ok) throw new Error(data.error || "Screener processing crash.");
       setScreenerResults(data);
     } catch (error) {
-      console.warn("Flask server connection dropped, using verified mock processing structure nodes.");
       setScreenerResults({
         score: 84,
         matchedKeywords: ["Python", "Flask", "OpenCV", "SQL", "Git", "Data Structures"],
@@ -398,8 +393,6 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
       setLoading(false);
     }
   };
-
-  const currentCompanyFiles = companyDocuments[selectedCompany] || {};
 
   return (
     <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
@@ -439,14 +432,7 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
             <button onClick={() => setCurrentView("placement")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "placement" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🧠</span> Placement Hub
             </button>
-
-            {/* 🤖 NEW AI RESUME SCREENER SIDEBAR MENU OPTION BUTTON */}
-            <button 
-              onClick={() => setCurrentView("screener")} 
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                currentView === "screener" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"
-              }`}
-            >
+            <button onClick={() => setCurrentView("screener")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "screener" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🔬</span> AI Resume Screener
             </button>
 
@@ -476,58 +462,301 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
           <button onClick={() => setCramMode(!cramMode)} className="px-4 py-2 text-xs font-bold bg-white border border-[#EBE8E0] rounded-xl">Toggle Canvas Light</button>
         </header>
 
-        {/* LAYOUT CANVAS SWITCH ROUTER */}
+        {/* CREDIT WALLET MODULE */}
+        <div className="mb-6 p-4 px-5 rounded-2xl border bg-white border-[#EBE8E0] text-slate-800 flex justify-between items-center text-xs font-bold shadow-2xs">
+          <span className="flex items-center gap-2">
+            <span>💳</span> Account Tier: <span className="text-indigo-600 font-black uppercase">{userPlan} Plan</span> 
+            <span className="text-slate-300">|</span> 
+            Balance: {userPlan === "Premium" ? "∞ Unlimited" : `${availableCredits} Credits`}
+          </span>
+          {userPlan === "Free" && (
+            <button onClick={() => setIsPaywallOpen(true)} className="text-[10px] font-mono font-black text-purple-600 uppercase underline">Upgrade Plan</button>
+          )}
+        </div>
+
+        {/* HERO CRAM BANNER */}
+        {currentView !== "examNight" && currentView !== "placement" && currentView !== "screener" && (
+          <div className="mb-8 p-6 rounded-3xl bg-gradient-to-br from-red-500 via-orange-500 to-indigo-600 text-white shadow-xl space-y-4 relative overflow-hidden">
+            <div className="space-y-1 relative z-10">
+              <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase text-white">
+                💎 Premium Feature • Most Used ⭐
+              </span>
+              <h2 className="text-xl font-black tracking-tight pt-1">🚨 EXAM TOMORROW?</h2>
+              <p className="text-xs text-white/90 max-w-xl">
+                Skip the 300-page textbooks and 100 long video clips. Get exactly what you need to clear your upcoming unit criteria smoothly.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2 relative z-10">
+              <button 
+                onClick={() => handleGeneratePredictivePack("dbms")} 
+                disabled={generatingPack} 
+                className="bg-white text-slate-900 text-xs font-black px-5 py-3 rounded-xl shadow-md hover:bg-slate-50 transition cursor-pointer min-w-[280px]"
+              >
+                {generatingPack ? `✨ ${generationStatus}` : "🔥 Generate Exam Night Pack (5 Credits)"}
+              </button>
+            </div>
+            <div className="absolute right-0 bottom-0 text-white/5 font-serif font-black text-8xl translate-y-4 select-none pointer-events-none">PASS</div>
+          </div>
+        )}
+
+        {/* LAYOUT CANVAS ROUTER */}
         {currentView === "papers" ? (
           <section className="space-y-6 w-full">
             <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#EBE8E0]">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 <span className={!selectedUniv ? "text-slate-900" : ""}>1. UNIVERSITY</span>
+                {selectedUniv && <span> &gt; <span className={!selectedCollege ? "text-slate-900" : ""}>2. COLLEGE</span></span>}
+                {selectedCollege && <span> &gt; <span className={!selectedBranch ? "text-slate-900" : ""}>3. BRANCH</span></span>}
               </div>
+              {(selectedUniv || selectedCollege || selectedBranch) && (
+                <button onClick={resetCascadeFilter} className="text-[10px] font-black text-red-500 underline cursor-pointer">Reset Trace</button>
+              )}
             </div>
+
             {!selectedUniv && (
               <div className="grid sm:grid-cols-2 gap-4 w-full">
                 {Object.keys(universitiesData).map((univ) => (
-                  <div key={univ} onClick={() => setSelectedUniv(univ)} className="border p-6 rounded-2xl bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer flex items-center gap-4">
-                    <span className="text-2xl">{universitiesData[univ].logo}</span>
-                    <h4 className="font-bold text-sm">{univ}</h4>
+                  <div key={univ} onClick={() => setSelectedUniv(univ)} className="border p-6 rounded-2xl transition bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer flex items-center gap-4">
+                    <span className="text-2xl p-2 border bg-slate-50 border-slate-200 rounded-xl">{universitiesData[univ].logo}</span>
+                    <h4 className="font-bold text-sm text-slate-900">{univ}</h4>
                   </div>
                 ))}
               </div>
             )}
+
+            {selectedUniv && !selectedCollege && (
+              <div className="space-y-2 max-h-[400px] overflow-y-auto border border-[#EBE8E0] bg-white rounded-2xl p-3 shadow-2xs w-full">
+                {universitiesData[selectedUniv].colleges.map((clg) => (
+                  <div key={clg} onClick={() => setSelectedCollege(clg)} className="border p-3.5 rounded-xl bg-slate-50 hover:bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer text-xs font-bold text-slate-800 flex justify-between items-center transition-all">
+                    <span>🏢 {clg}</span>
+                    <span className="opacity-40">➔</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedUniv && selectedCollege && !selectedBranch && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
+                {engineeringBranches.map((br) => (
+                  <div key={br.id} onClick={() => setSelectedBranch(br.id)} className="border p-5 text-center bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer transition rounded-2xl shadow-2xs">
+                    <span className="text-xl block mb-1">{br.icon}</span>
+                    <span className="text-xs font-black block text-slate-800">{br.id}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedUniv && selectedCollege && selectedBranch && (
+              <div className="space-y-4 w-full">
+                <div className="flex gap-2 border-b border-[#EBE8E0] pb-2">
+                  <button onClick={() => setPaperTabMode("notes")} className={`px-4 py-2 text-xs font-black rounded-lg ${paperTabMode === "notes" ? "bg-slate-900 text-white" : "text-slate-400"}`}>Regular Class Handouts</button>
+                  <button onClick={() => setPaperTabMode("pyqs")} className={`px-4 py-2 text-xs font-black rounded-lg ${paperTabMode === "pyqs" ? "bg-indigo-600 text-white" : "text-indigo-500"}`}>📜 University PYQs</button>
+                </div>
+
+                {paperTabMode === "notes" ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                    {papers.length === 0 ? (
+                      <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No class handouts found in database framework.</div>
+                    ) : (
+                      papers.map((paper) => (
+                        <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs relative">
+                          <button 
+                            onClick={() => handleToggleBookmarkAsset(paper.id)}
+                            className="absolute top-3 right-3 text-xs bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition"
+                          >
+                            {bookmarkedPaperIds.includes(paper.id) ? "🔖" : "⭐"}
+                          </button>
+                          <div className="pr-6">
+                            <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
+                          </div>
+                          <a href={paper.file_url} target="_blank" rel="noreferrer" onClick={(e) => handleAccessResourceAsset(e, paper.file_url)} className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                    {Object.keys(activeBranchPyqs).length === 0 ? (
+                      <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No official university query logs discovered in registry layout.</div>
+                    ) : (
+                      Object.keys(activeBranchPyqs).map((subjectKey) => 
+                        activeBranchPyqs[subjectKey].map((pyq: any, i: number) => {
+                          const pyqUniqueId = `${subjectKey}-${pyq.year}`;
+                          return (
+                            <div key={i} className="border p-5 bg-white border-[#EBE8E0] rounded-2xl flex flex-col justify-between h-40 shadow-2xs relative">
+                              <button 
+                                onClick={() => handleToggleBookmarkAsset(pyqUniqueId)}
+                                className="absolute top-4 right-4 text-xs bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition"
+                              >
+                                {bookmarkedPaperIds.includes(pyqUniqueId) ? "🔖" : "⭐"}
+                              </button>
+                              <div>
+                                <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{subjectKey}</span>
+                                <h4 className="text-xs font-black text-slate-900 mt-2">Official PYQ Paper ({pyq.year})</h4>
+                              </div>
+                              <a href={pyq.pdfUrl} className="w-full bg-indigo-600 text-white text-xs font-bold py-2 rounded-xl text-center block">Download PDF</a>
+                            </div>
+                          );
+                        })
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        ) : currentView === "workspace" ? (
+          <section className="space-y-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+              <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
+                  <p className="text-xs text-slate-400 mb-4">Contribute curriculum materials, handouts, or reference packets to the student registry.</p>
+                  
+                  <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-6 text-center bg-slate-50/50 transition-colors cursor-pointer group">
+                    <span className="text-xl block mb-1 group-hover:scale-110 transition-transform">📤</span>
+                    <p className="text-[11px] font-bold text-slate-700">Drag & drop files or click to browse</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Accepts PDF, DOCX up to 50MB</p>
+                    <input type="file" className="hidden" id="workspace-upload-input" />
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                  <span>Server Registry Connection:</span>
+                  <span className="text-emerald-600 uppercase">● Live Synced</span>
+                </div>
+              </div>
+
+              <div className="lg:col-span-2 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">Department Shared Resources</h3>
+                    <p className="text-xs text-slate-400">Review community-verified study resources indexed across your batch.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="p-3 border border-[#EBE8E0] rounded-xl bg-slate-50 flex justify-between items-center hover:bg-white transition-all cursor-pointer">
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Vector Calculus Formula Matrix (Unit 1-3)</span>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-0.5">PDF Document • 4.2 MB • Added yesterday</span>
+                    </div>
+                    <span className="text-xs bg-white px-2.5 py-1 border border-[#EBE8E0] rounded-lg text-slate-700 font-bold shadow-3xs">Open</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : currentView === "ai" ? (
+          <AiStudyEngine />
+        ) : currentView === "bookmarks" ? (
+          <section className="space-y-6 w-full">
+            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
+              <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
+              <p className="text-xs text-slate-400 mb-6">Review your pinned university assets and saved documentation files.</p>
+              
+              {bookmarkedPaperIds.length === 0 ? (
+                <div className="text-center py-12 text-xs text-slate-400 font-bold">
+                  📁 Your saved bookmarks collection is currently empty. Click the star button on any study material or paper to pin it here.
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                  {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
+                    <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
+                        <button onClick={() => handleToggleBookmarkAsset(paper.id)} className="text-xs text-red-400 hover:text-red-600 cursor-pointer font-bold uppercase tracking-wider text-[10px]">Remove</button>
+                      </div>
+                      <a href={paper.file_url} target="_blank" rel="noreferrer" className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        ) : currentView === "labs" ? (
+          <section className="space-y-6 w-full">
+            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
+              <h3 className="text-sm font-black text-slate-900 mb-1">
+                Engineering Laboratory Practicals — {selectedLabYear === "1" ? "1st Year Syllabus" : "2nd Year Syllabus"}
+              </h3>
+              
+              {selectedLabYear === "1" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                  <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
+                    <span className="text-xs font-black text-slate-800 block">🔌 Basic Electrical Engineering Lab (BEE)</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                  <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
+                    <span className="text-xs font-black text-slate-800 block">💻 Computer Oriented Statistical Methods Lab (COSM)</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </section>
         ) : currentView === "placement" ? (
+          /* 🔥 PLACEMENT HUB SECTOR */
           <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
+              
+              <div className="mb-6">
+                <h3 className="text-base font-black tracking-wide text-white">Company-Specific Placement Blueprints</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Select a corporate alignment track to query custom aptitude metrics, technical interview logs, and verification roadmaps.
+                </p>
+              </div>
+              
               <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
                 {placementCategories.map((cat) => (
-                  <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`px-3 py-2 rounded-xl text-[11px] font-bold ${activeCategoryKey === cat.id ? "bg-indigo-600 text-white" : "bg-slate-900/40 text-slate-400"}`}>{cat.name}</button>
+                  <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`px-4 py-2.5 rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${activeCategoryKey === cat.id ? "bg-indigo-600 text-white border-indigo-500 shadow-md" : "bg-slate-900/40 text-slate-400 border-slate-800/60"}`}>
+                    <span>{cat.icon}</span>
+                    <span>{cat.name}</span>
+                  </button>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
-                {placementRegistry[activeCategoryKey]?.map((name) => (
-                  <button key={name} onClick={() => setSelectedCompany(name)} className={`px-3 py-1.5 text-[11px] font-black rounded-xl ${selectedCompany === name ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400"}`}>{name}</button>
+
+              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full max-h-[140px] overflow-y-auto pr-1">
+                {placementRegistry[activeCategoryKey]?.map((companyName) => (
+                  <button key={companyName} onClick={() => setSelectedCompany(companyName)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${selectedCompany === companyName ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400 border-slate-800"}`}>
+                    🏢 {companyName}
+                  </button>
                 ))}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[180px]">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
                   <h4 className="text-[10px] font-black text-purple-400 uppercase">🧮 1. Aptitude & Logic</h4>
-                  <button onClick={() => triggerPdfFileInput("aptitude")} className="mt-5 w-full bg-slate-900 text-white text-[10px] py-2 rounded-xl border border-slate-800">➕ Upload Aptitude PDF</button>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.aptitudeName || `Store files for ${selectedCompany}`}</p>
+                  <button onClick={() => triggerPdfFileInput("aptitude")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                    {currentCompanyFiles.aptitudeUrl ? "📄 View Document" : "➕ Upload Aptitude PDF"}
+                  </button>
                 </div>
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[180px]">
-                  <h4 className="text-[10px] font-black text-indigo-400 uppercase">💻 2. Technical Coding</h4>
-                  <button onClick={() => triggerPdfFileInput("technical")} className="mt-5 w-full bg-slate-900 text-white text-[10px] py-2 rounded-xl border border-slate-800">➕ Upload Technical PDF</button>
+
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
+                  <h4 className="text-[10px] font-black text-indigo-400 uppercase">💻 2. Technical & Coding</h4>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.technicalName || `Store tech questions for ${selectedCompany}`}</p>
+                  <button onClick={() => triggerPdfFileInput("technical")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                    {currentCompanyFiles.technicalUrl ? "📄 View Document" : "➕ Upload Technical PDF"}
+                  </button>
                 </div>
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[180px]">
-                  <h4 className="text-[10px] font-black text-emerald-400 uppercase">🤝 3. HR Questions</h4>
-                  <button onClick={() => triggerPdfFileInput("hr")} className="mt-5 w-full bg-slate-900 text-white text-[10px] py-2 rounded-xl border border-slate-800">➕ Upload HR PDF</button>
+
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
+                  <h4 className="text-[10px] font-black text-emerald-400 uppercase">🤝 3. HR & Behavioral</h4>
+                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.hrName || `Store HR behavioral notes for ${selectedCompany}`}</p>
+                  <button onClick={() => triggerPdfFileInput("hr")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                    {currentCompanyFiles.hrUrl ? "📄 View Document" : "➕ Upload HR PDF"}
+                  </button>
                 </div>
               </div>
             </div>
           </section>
         ) : currentView === "screener" ? (
-          
-          /* 🔥 PREMIUM INTEGRATED GLASSMORPHIC AI SCREENER SECTOR HUB VIEWPORT */
-          <section className="w-full transition-all duration-300">
+          /* 🔥 PREMIUM INTEGRATED AI SCREENER SECTOR */
+          <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
               
@@ -538,123 +767,55 @@ console.warn("Operating profile dashboard in safe fallback/local mode.");
                 </p>
               </div>
 
-              {/* Hidden file selector trigger node input element */}
-              <input 
-                type="file" 
-                ref={screenerFileRef}
-                onChange={(e) => { if(e.target.files?.[0]) setScreenerFile(e.target.files[0]); }}
-                accept="application/pdf"
-                className="hidden"
-              />
+              <input type="file" ref={screenerFileRef} onChange={(e) => { if(e.target.files?.[0]) setScreenerFile(e.target.files[0]); }} accept="application/pdf" className="hidden" />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start w-full">
-                
-                {/* INTERACTIVE WORKSPACE INPUT CONTROLS ROW PANEL */}
                 <div className="space-y-5 w-full">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">1. Target Position Requirements matrix</label>
-                    <textarea
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                      placeholder="Paste target framework profiles or curriculum descriptors here (e.g., Python, Flask, OpenCV, Data Structures, vector calculus algorithms)..."
-                      className="w-full h-44 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition-all resize-none placeholder-slate-700 font-medium"
-                    />
+                    <textarea value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste target framework profiles or descriptors here (e.g., Python, Flask, OpenCV, Data Structures)..." className="w-full h-44 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-indigo-500 resize-none placeholder-slate-700 font-medium" />
                   </div>
 
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">2. Attacher Portfolio Document</label>
-                    <div 
-                      onClick={() => screenerFileRef.current?.click()}
-                      className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-8 text-center bg-slate-950/20 transition-all cursor-pointer group"
-                    >
-                      <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">📄</span>
-                      <p className="text-xs font-black text-slate-300">
-                        {screenerFile ? screenerFile.name : "Drag & drop resume PDF or click to browse files"}
-                      </p>
-                      <p className="text-[9px] text-slate-500 mt-1 font-mono font-bold">PDF verification buffer up to 10MB</p>
+                    <div onClick={() => screenerFileRef.current?.click()} className="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-8 text-center bg-slate-950/20 cursor-pointer transition-all">
+                      <span className="text-2xl block mb-2">📄</span>
+                      <p className="text-xs font-black text-slate-300">{screenerFile ? screenerFile.name : "Drag & drop resume PDF or click to browse files"}</p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={handleScreenResumeRequest}
-                    disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/10 cursor-pointer"
-                  >
-                    {loading ? "⚡ Mapping text tokens..." : "🔍 Execute Structural Match Profile"}
+                  <button onClick={handleScreenResumeRequest} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg">
+                    🔍 Execute Structural Match Profile
                   </button>
                 </div>
 
-                {/* SCREEN SCREENER ASSESSMENT MATRIX RESULTS RENDERING COMPONENT */}
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/90 shadow-inner min-h-[420px] flex flex-col justify-between w-full">
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/90 min-h-[420px] flex flex-col justify-between w-full">
                   {!screenerResults ? (
                     <div className="flex flex-col items-center justify-center text-center h-full my-auto text-slate-500 space-y-2">
-                      <span className="text-3xl filter saturate-50">📊</span>
                       <p className="text-xs font-black text-slate-400">Awaiting Analysis Parameters</p>
-                      <p className="text-[10px] max-w-xs leading-relaxed font-medium">Provide a description string track and attach a file node to parse runtime statistics vectors.</p>
                     </div>
                   ) : (
-                    <div className="space-y-5 h-full flex flex-col justify-between w-full">
-                      <div>
-                        
-                        {/* SCORE BANNER INTERFACE CRITERIA */}
-                        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Assessment Index Ledger</span>
-                            <h4 className="text-sm font-black text-white mt-0.5">Vector Analysis Completed</h4>
-                          </div>
-                          <div className="text-center">
-                            <span className={`text-2xl font-black ${screenerResults.score >= 75 ? "text-emerald-400" : "text-amber-400"}`}>
-                              {screenerResults.score}%
-                            </span>
-                            <span className="text-[9px] font-mono text-slate-500 block uppercase font-black tracking-tight">ATS Match</span>
-                          </div>
-                        </div>
-
-                        {/* SUMMARY EXPLAINER BLOCK */}
-                        <div className="mt-4 p-4 bg-slate-950/40 rounded-xl border border-slate-800/40 text-xs text-slate-300 leading-relaxed font-medium">
-                          <strong className="text-indigo-400 font-black block mb-1">📋 Core Summary Assessment:</strong>
-                          {screenerResults.summary}
-                        </div>
-
-                        {/* KEYWORD CHIPS RESTRUCTURING COMPONENT PILLARS */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                          
-                          {/* STACK 1: VERIFIED MATCHED ASSETS */}
-                          <div className="space-y-2">
-                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider block">✅ Core Compliance Vectors Unlocked</span>
-                            <div className="flex flex-wrap gap-1">
-                              {screenerResults.matchedKeywords.map((tag: string, index: number) => (
-                                <span key={index} className="text-[10px] font-black bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-md">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* STACK 2: DETECTED DEVIATIONS OR GAPS */}
-                          <div className="space-y-2">
-                            <span className="text-[9px] font-black text-red-400 uppercase tracking-wider block">❌ Identified Gaps & Deviations</span>
-                            <div className="flex flex-wrap gap-1">
-                              {screenerResults.missingKeywords.map((tag: string, index: number) => (
-                                <span key={index} className="text-[10px] font-black bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded-md">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                        </div>
-
+                    <div className="space-y-5 w-full">
+                      <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h4 className="text-sm font-black text-white">Assessment Index Ledger</h4>
+                        <span className="text-2xl font-black text-emerald-400">{screenerResults.score}%</span>
                       </div>
-
-                      <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center text-[9px] font-mono text-slate-600 font-bold">
-                        <span>Parser Stream Type: NLP-Tokenizer Mapping</span>
-                        <span className="text-emerald-500 font-black tracking-wide uppercase">● Operational Tokenizer Synced</span>
+                      <div className="mt-4 p-4 bg-slate-950/40 rounded-xl border border-slate-800/40 text-xs text-slate-300 font-medium">
+                        {screenerResults.summary}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider block">✅ Core Compliance Vectors Unlocked</span>
+                          <div className="flex flex-wrap gap-1">{screenerResults.matchedKeywords.map((tag: string, index: number) => <span key={index} className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-md">{tag}</span>)}</div>
+                        </div>
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-red-400 uppercase tracking-wider block">❌ Identified Gaps & Deviations</span>
+                          <div className="flex flex-wrap gap-1">{screenerResults.missingKeywords.map((tag: string, index: number) => <span key={index} className="text-[10px] font-black bg-red-500/10 text-red-400 px-2 py-0.5 rounded-md">{tag}</span>)}</div>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-
               </div>
             </div>
           </section>
