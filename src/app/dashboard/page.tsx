@@ -95,22 +95,17 @@ const engineeringBranches = [
   { id: "IT", name: "Information Technology", icon: "🌐" }
 ];
 
+// 🚀 REFACTORED CORE STREAMLINED CATEGORIES
 const placementCategories = [
   { id: "dream", name: "🎯 Top Dream Companies", icon: "⭐" },
-  { id: "software", name: "💻 Software & IT MNCs", icon: "⚙️" },
-  { id: "services", name: "🌐 IT Services MNCs", icon: "🤝" },
-  { id: "semi", name: "🤖 AI & Semiconductor", icon: "🔌" },
-  { id: "product", name: "📱 Product-Based Companies", icon: "🚀" },
-  { id: "finance", name: "🏦 Finance & Consulting", icon: "📈" }
+  { id: "product", name: "📱 Product-Based MNCs", icon: "🚀" },
+  { id: "service", name: "🌐 Service-Based MNCs", icon: "🤝" }
 ];
 
 const placementRegistry: Record<string, string[]> = {
   dream: ["Google", "Microsoft", "Amazon", "NVIDIA", "Adobe", "Atlassian", "Salesforce", "Oracle", "JPMorgan Chase", "Goldman Sachs"],
-  software: ["Google", "Microsoft", "Amazon", "Meta", "Apple", "IBM", "Oracle", "Salesforce", "Adobe", "ServiceNow", "SAP", "Intuit"],
-  services: ["Accenture", "Capgemini", "Cognizant", "Infosys", "Tata Consultancy Services", "Wipro", "HCLTech", "Tech Mahindra", "DXC Technology"],
-  semi: ["NVIDIA", "Intel", "AMD", "Qualcomm", "Texas Instruments", "Broadcom"],
-  product: ["Atlassian", "Zoho", "PayPal", "Uber", "Airbnb", "LinkedIn"],
-  finance: ["JPMorgan Chase", "Goldman Sachs", "Morgan Stanley", "Deloitte", "KPMG", "EY", "PwC"]
+  product: ["Google", "Microsoft", "Amazon", "Meta", "Apple", "IBM", "Oracle", "Salesforce", "Adobe", "ServiceNow", "SAP", "Intuit", "NVIDIA", "Intel", "AMD", "Qualcomm", "Texas Instruments", "Broadcom", "Atlassian", "Zoho", "PayPal", "Uber", "Airbnb", "LinkedIn", "JPMorgan Chase", "Goldman Sachs", "Morgan Stanley"],
+  service: ["Accenture", "Capgemini", "Cognizant", "Infosys", "Tata Consultancy Services", "Wipro", "HCLTech", "Tech Mahindra", "DXC Technology", "Deloitte", "KPMG", "EY", "PwC"]
 };
 
 interface CompanyFiles {
@@ -152,7 +147,6 @@ export default function StudentDashboard() {
   const [activeCategoryKey, setActiveCategoryKey] = useState<string>("dream");
   const [selectedCompany, setSelectedCompany] = useState<string>("Google");
   
-  // Dynamic State Matrix mapping documents separately for each company
   const [companyDocuments, setCompanyDocuments] = useState<Record<string, CompanyFiles>>({});
   const [activeUploadTarget, setActiveUploadTarget] = useState<"aptitude" | "technical" | "hr" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -324,7 +318,6 @@ export default function StudentDashboard() {
     }
   };
 
-  // Triggers input upload browser window element
   const triggerPdfFileInput = (targetRound: "aptitude" | "technical" | "hr") => {
     setActiveUploadTarget(targetRound);
     if (fileInputRef.current) {
@@ -332,7 +325,6 @@ export default function StudentDashboard() {
     }
   };
 
-  // Captures local document target arrays and saves them onto local state
   const handlePdfUploadMapping = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeUploadTarget) return;
@@ -365,7 +357,6 @@ export default function StudentDashboard() {
       <PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} cramMode={cramMode} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(email) => setActiveUserEmail(email)} />
       
-      {/* Hidden PDF Upload Node Engine */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -407,8 +398,6 @@ export default function StudentDashboard() {
             <button onClick={() => { setCurrentView("bookmarks"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "bookmarks" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🔖</span> Bookmarks
             </button>
-
-            {/* 🧠 PLACEMENT HUB TRACK NAVIGATION */}
             <button onClick={() => setCurrentView("placement")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "placement" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🧠</span> Placement Hub
             </button>
@@ -429,7 +418,7 @@ export default function StudentDashboard() {
         </div>
       </aside>
 
-      {/* CORE WORKSPACE VIEWPORT - w-full to dynamically adjust layout bounds */}
+      {/* CORE WORKSPACE VIEWPORT */}
       <div className="flex-1 p-6 md:p-10 w-full flex flex-col transition-all duration-500 overflow-x-hidden">
         
         <header className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8 pb-4 border-b border-[#EBE8E0]">
@@ -788,7 +777,7 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 FULLY ADJUSTED RESPONSIVE PRO-LEVEL PLACEMENT HUD CONTAINER */
+          /* 🔥 PREMIUM REFACTORED SECURE PLACEMENT EDGE COMPLIANT WITH image_a2e06d.jpg */
           <section className="w-full">
             <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
@@ -796,17 +785,17 @@ export default function StudentDashboard() {
               <div className="mb-6">
                 <h3 className="text-base font-black tracking-wide text-white">Company-Specific Placement Blueprints</h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Select a corporate channel to query target analytical trends, runtime coding parameters, and ATS verification matrices.
+                  Select a corporate alignment track to query custom aptitude metrics, technical interview logs, and verification roadmaps.
                 </p>
               </div>
               
-              {/* Responsive Category Wrapping Strip */}
+              {/* Product vs. Service Strategic Category Selector Ribbon */}
               <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
                 {placementCategories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`px-3 py-2 rounded-xl transition-all border text-[11px] font-bold flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${
                       activeCategoryKey === cat.id 
                         ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
                         : "bg-slate-900/40 text-slate-400 border-slate-800/60 hover:border-slate-700 hover:text-white"
@@ -818,39 +807,39 @@ export default function StudentDashboard() {
                 ))}
               </div>
 
-              {/* Sub-Company Ribbon */}
-              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
+              {/* Comprehensive MNC Horizontal Navigator Ribbon */}
+              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full max-h-[140px] overflow-y-auto pr-1">
                 {placementRegistry[activeCategoryKey]?.map((companyName) => (
                   <button
                     key={companyName}
                     onClick={() => setSelectedCompany(companyName)}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-xl transition-all border ${
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-xl transition-all border ${
                       selectedCompany === companyName
                         ? "bg-white text-slate-950 border-white shadow-lg"
                         : "bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
                     }`}
                   >
-                    🏢 {companyName}
+                    💼 {companyName}
                   </button>
                 ))}
               </div>
 
-              {/* Active Asset Metadata Banner */}
+              {/* Dynamic Metadata Focus Banner */}
               <div className="mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800/60 text-xs flex justify-between items-center backdrop-blur-md w-full">
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">Target Channel Node</span>
-                  <span className="font-black text-white text-sm mt-0.5">{selectedCompany} Operational Hub</span>
+                  <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">Active Blueprint Node</span>
+                  <span className="font-black text-white text-sm mt-0.5">{selectedCompany} Placement Directory</span>
                 </div>
                 <div className="text-right text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Verified Blueprint Stream</span>
+                  <span>Secure Local Buffer Active</span>
                 </div>
               </div>
 
-              {/* Responsive Preparation Blueprint Grid Container */}
+              {/* Full Width Glassmorphic PDF Action Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                 
-                {/* 1. QUANT ROUND PIPELINE BOX */}
+                {/* DYNAMIC SLOT 1: APTITUDE */}
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
@@ -862,7 +851,7 @@ export default function StudentDashboard() {
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
                       {currentCompanyFiles.aptitudeName 
                         ? `Loaded Asset: ${currentCompanyFiles.aptitudeName}` 
-                        : `Upload quantitative sheets or logic constraints optimized for ${selectedCompany}.`}
+                        : `Store quantitative blueprints and evaluation parameters optimized for ${selectedCompany}.`}
                     </p>
                   </div>
                   <div className="mt-5 w-full flex flex-col gap-2">
@@ -886,7 +875,7 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                {/* 2. TECHNICAL & CODING ROUND PIPELINE BOX */}
+                {/* DYNAMIC SLOT 2: TECHNICAL TECHNICAL ROUNDS */}
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
@@ -898,7 +887,7 @@ export default function StudentDashboard() {
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
                       {currentCompanyFiles.technicalName 
                         ? `Loaded Asset: ${currentCompanyFiles.technicalName}` 
-                        : `Upload data structure code sheets and technical pools optimized for ${selectedCompany}.`}
+                        : `Store runtime logic loops and verified algorithmic blueprints optimized for ${selectedCompany}.`}
                     </p>
                   </div>
                   <div className="mt-5 w-full flex flex-col gap-2">
@@ -922,7 +911,7 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
-                {/* 3. HR & VERBAL ROUND PIPELINE BOX */}
+                {/* DYNAMIC SLOT 3: HR & BEHAVIORAL */}
                 <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
@@ -934,7 +923,7 @@ export default function StudentDashboard() {
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
                       {currentCompanyFiles.hrName 
                         ? `Loaded Asset: ${currentCompanyFiles.hrName}` 
-                        : `Upload behavioral assessment scripts and core talking roadmaps optimized for ${selectedCompany}.`}
+                        : `Store STAR talking matrices and contextual leadership portfolios optimized for ${selectedCompany}.`}
                     </p>
                   </div>
                   <div className="mt-5 w-full flex flex-col gap-2">
