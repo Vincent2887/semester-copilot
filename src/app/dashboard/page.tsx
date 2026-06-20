@@ -95,71 +95,23 @@ const engineeringBranches = [
   { id: "IT", name: "Information Technology", icon: "🌐" }
 ];
 
-// Mock database structured data array for company metrics
-const placementCompaniesData: Record<string, {
-  logo: string;
-  tagline: string;
-  aptitude: string[];
-  technical: string[];
-  hrTrivia: string[];
-}> = {
-  "TCS (Ninja/Digital)": {
-    logo: "🌐",
-    tagline: "Mass Recruiter • Focuses heavily on Foundations & Logic",
-    aptitude: [
-      "Percentages, Profit & Loss, and Time & Work equations (highly repeated).",
-      "Data Interpretation matrices and logical series completion questions.",
-      "Elementary statistics, standard deviations, and probability arrays."
-    ],
-    technical: [
-      "Command Line Arguments, String manipulation, and Array reversals in Python/C.",
-      "Basic DBMS queries: SQL Joins, Aggregate functions, and indexing differences.",
-      "Core OOPs pillars: Explaining Polymorphism vs Encapsulation with real script examples."
-    ],
-    hrTrivia: [
-      "Why do you want to join TCS over startup ecosystems?",
-      "Are you willing to relocate to different regional business offices across India?",
-      "Explain your micro-project architecture to a non-technical manager."
-    ]
-  },
-  "Infosys (SE/Power Programmer)": {
-    logo: "🔷",
-    tagline: "Systems Engineer & High-Tier Coding Profiles",
-    aptitude: [
-      "Cryptarithmetic puzzles (Unique letter-to-digit translation equations).",
-      "Permutations, Combinations, and Advanced Probability tracks.",
-      "Data Sufficiency constraints and logical syllogisms."
-    ],
-    technical: [
-      "Data Structures traversal logic: Linked lists reversals, BST insertions.",
-      "Greedy Algorithm approaches or Dynamic Programming basics (Power Programmer track).",
-      "Explain Normalization vs Denormalization models in database frameworks."
-    ],
-    hrTrivia: [
-      "How do you resolve architectural disputes or workspace team conflicts?",
-      "Describe a scenario where you had to master a framework under tight time limits.",
-      "What are your continuous learning plans for cloud technology vectors?"
-    ]
-  },
-  "Cognizant (GenC/GenC Pro)": {
-    logo: "📈",
-    tagline: "Service & Product Consulting Metrics",
-    aptitude: [
-      "Quantitative Word Problems: Speed, Distance, and Time calculations.",
-      "Numerical reasoning, alphanumeric matrix completions.",
-      "Verbal ability: Contextual comprehension and error tracking arrays."
-    ],
-    technical: [
-      "Explain the complete Software Development Life Cycle (SDLC) models.",
-      "REST API operations: Differentiating GET, POST, PUT, DELETE headers.",
-      "Write a script block to find matching duplicates within an integer list."
-    ],
-    hrTrivia: [
-      "How do you handle unexpected client changes to software requirements?",
-      "What are your core engineering interests outside standard web development frameworks?",
-      "Describe your role and contribution inside your recent team mini-project."
-    ]
-  }
+// Structural categorization layout for the corporate matrix
+const placementCategories = [
+  { id: "dream", name: "🎯 Top Dream Companies", icon: "⭐" },
+  { id: "software", name: "💻 Software & IT MNCs", icon: "⚙️" },
+  { id: "services", name: "🌐 IT Services MNCs", icon: "🤝" },
+  { id: "semi", name: "🤖 AI & Semiconductor", icon: "🔌" },
+  { id: "product", name: "📱 Product-Based Companies", icon: "🚀" },
+  { id: "finance", name: "🏦 Finance & Consulting", icon: "📈" }
+];
+
+const placementRegistry: Record<string, string[]> = {
+  dream: ["Google", "Microsoft", "Amazon", "NVIDIA", "Adobe", "Atlassian", "Salesforce", "Oracle", "JPMorgan Chase", "Goldman Sachs"],
+  software: ["Google", "Microsoft", "Amazon", "Meta", "Apple", "IBM", "Oracle", "Salesforce", "Adobe", "ServiceNow", "SAP", "Intuit"],
+  services: ["Accenture", "Capgemini", "Cognizant", "Infosys", "Tata Consultancy Services", "Wipro", "HCLTech", "Tech Mahindra", "DXC Technology"],
+  semi: ["NVIDIA", "Intel", "AMD", "Qualcomm", "Texas Instruments", "Broadcom"],
+  product: ["Atlassian", "Zoho", "PayPal", "Uber", "Airbnb", "LinkedIn"],
+  finance: ["JPMorgan Chase", "Goldman Sachs", "Morgan Stanley", "Deloitte", "KPMG", "EY", "PwC"]
 };
 
 export default function StudentDashboard() {
@@ -190,8 +142,9 @@ export default function StudentDashboard() {
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [selectedLabYear, setSelectedLabYear] = useState<string | null>(null);
 
-  // Placements Section State Toggle
-  const [activeCompanyKey, setActiveCompanyKey] = useState<string>("TCS (Ninja/Digital)");
+  // Placements Section Category / Company State Toggles
+  const [activeCategoryKey, setActiveCategoryKey] = useState<string>("dream");
+  const [selectedCompany, setSelectedCompany] = useState<string>("Google");
 
   // Bookmark Collections State
   const [bookmarkedPaperIds, setBookmarkedPaperIds] = useState<string[]>([]);
@@ -354,6 +307,15 @@ export default function StudentDashboard() {
 
   const activeBranchPyqs = selectedBranch ? (pastYearPapersRegistry[selectedBranch] || {}) : {};
 
+  // Auto-select first company when shifting categories
+  const handleCategoryChange = (catKey: string) => {
+    setActiveCategoryKey(catKey);
+    const linkedCompanies = placementRegistry[catKey];
+    if (linkedCompanies && linkedCompanies.length > 0) {
+      setSelectedCompany(linkedCompanies[0]);
+    }
+  };
+
   return (
     <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
       cramMode ? "bg-[#120A0A] text-[#F5EBEB]" : "bg-[#F4F1E8] text-slate-800"
@@ -422,7 +384,7 @@ export default function StudentDashboard() {
         
         <header className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8 pb-4 border-b border-[#EBE8E0]">
           <h1 className="text-xl font-black tracking-tight text-slate-900">
-            {currentView === "examNight" ? "🚨 Night Pack Mode Active" : currentView === "placement" ? "💼 Campus Placement Central" : "Dashboard Workspace"}
+            {currentView === "examNight" ? "🚨 Night Pack Mode Active" : currentView === "placement" ? "💼 Corporate Placement Blueprints" : "Dashboard Workspace"}
           </h1>
           <button onClick={() => setCramMode(!cramMode)} className="px-4 py-2 text-xs font-bold bg-white border border-[#EBE8E0] rounded-xl">Toggle Canvas Light</button>
         </header>
@@ -776,82 +738,121 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 BRAND NEW DYNAMIC PLACEMENT ENGINE BLOCK */
+          /* 🔥 DYNAMIC MASTER MNC PLACEMENT MATRIX PORTAL */
           <section className="space-y-6">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
               <h3 className="text-sm font-black text-slate-900 mb-1">Company-Specific Placement Blueprints</h3>
-              <p className="text-xs text-slate-400 mb-6">Select a target company matrix to parse pattern vectors, aptitude filters, and mock viva tokens.</p>
+              <p className="text-xs text-slate-400 mb-6">Select a target category pipeline and choose any MNC to parse quantitative trends, coding parameters, and interview blueprints.</p>
               
-              {/* Horizontal Company Navigator Bar */}
-              <div className="flex gap-2 border-b border-slate-100 pb-3 mb-6 overflow-x-auto">
-                {Object.keys(placementCompaniesData).map((companyName) => (
+              {/* Category Switching Strip layout */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-slate-100 pb-4 mb-4">
+                {placementCategories.map((cat) => (
                   <button
-                    key={companyName}
-                    onClick={() => setActiveCompanyKey(companyName)}
-                    className={`px-4 py-2 text-xs font-black rounded-xl transition-all whitespace-nowrap ${
-                      activeCompanyKey === companyName 
-                        ? "bg-slate-900 text-white shadow-3xs" 
-                        : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`px-3 py-2 text-left rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${
+                      activeCategoryKey === cat.id 
+                        ? "bg-slate-900 text-white border-slate-900 shadow-3xs" 
+                        : "bg-slate-50/50 text-slate-600 border-slate-200/60 hover:bg-slate-50"
                     }`}
                   >
-                    <span className="mr-1.5">{placementCompaniesData[companyName].logo}</span>
-                    {companyName}
+                    <span>{cat.icon}</span>
+                    <span className="truncate">{cat.name}</span>
                   </button>
                 ))}
               </div>
 
-              {/* Company Details Metadata Summary Card */}
-              <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Target Track Strategy</span>
-                <span className="font-black text-slate-800 block text-sm mt-0.5">{activeCompanyKey}</span>
-                <span className="text-slate-500 font-medium block mt-0.5">{placementCompaniesData[activeCompanyKey].tagline}</span>
+              {/* Sub-Company Horizontal Selector Ribbon */}
+              <div className="flex gap-1.5 overflow-x-auto pb-3 border-b border-slate-100/80 mb-6">
+                {placementRegistry[activeCategoryKey]?.map((companyName) => (
+                  <button
+                    key={companyName}
+                    onClick={() => setSelectedCompany(companyName)}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap border ${
+                      selectedCompany === companyName
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-3xs"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                    }`}
+                  >
+                    💼 {companyName}
+                  </button>
+                ))}
               </div>
 
-              {/* Three-Tier Interview Prep Track Grid */}
+              {/* Current Track Profile Overview Card */}
+              <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs flex justify-between items-center">
+                <div>
+                  <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Target Track Strategy</span>
+                  <span className="font-black text-slate-800 block text-sm mt-0.5">{selectedCompany}</span>
+                </div>
+                <span className="text-[10px] bg-indigo-50 border border-indigo-100/50 text-indigo-700 font-bold rounded-lg px-2.5 py-1">
+                  Active Vector Mapping
+                </span>
+              </div>
+
+              {/* Three-Tier Structural Cards Displaying Aptitude, Technical, and HR Panels */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* PILLAR 1: QUANTITATIVE & APTITUDE CRITERIA */}
+                {/* PANEL MODULE 1: APTITUDE & LOGICAL REASONING */}
                 <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
                   <h4 className="text-[10px] font-black tracking-wider text-purple-700 uppercase mb-3 flex items-center gap-1.5">
                     🧮 1. Aptitude & Logical Reasoning
                   </h4>
                   <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    {placementCompaniesData[activeCompanyKey].aptitude.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                        <span className="text-purple-400">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-purple-400 font-bold">•</span>
+                      <span>Quant patterns covering ratios, permutations, and compound interest formulas commonly mapped in {selectedCompany} online assessments.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-purple-400 font-bold">•</span>
+                      <span>Analytical syllogisms, matrix constraints, and data interpretation trend vectors.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-purple-400 font-bold">•</span>
+                      <span>Numerical logic arrays and verbal comprehensive reasoning checkpoints.</span>
+                    </li>
                   </ul>
                 </div>
 
-                {/* PILLAR 2: TECHNICAL ROUTING & CODING LOGS */}
+                {/* PANEL MODULE 2: TECHNICAL & CODING ROUNDS */}
                 <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
                   <h4 className="text-[10px] font-black tracking-wider text-indigo-700 uppercase mb-3 flex items-center gap-1.5">
                     💻 2. Technical & Coding Rounds
                   </h4>
                   <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    {placementCompaniesData[activeCompanyKey].technical.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                        <span className="text-indigo-400">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-indigo-400 font-bold">•</span>
+                      <span>Repeated data structure problems focused on linked list reversals, arrays, and sorting parameters for {selectedCompany}.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-indigo-400 font-bold">•</span>
+                      <span>Core object-oriented design metrics: Polymorphism, abstraction pillars, and compiler rules.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-indigo-400 font-bold">•</span>
+                      <span>DBMS structured query models, indexing benchmarks, and OS memory mapping fundamentals.</span>
+                    </li>
                   </ul>
                 </div>
 
-                {/* PILLAR 3: CORE MANAGEMENT HR VIVA TRIVIA */}
+                {/* PANEL MODULE 3: HR & MANAGERIAL QUESTIONS */}
                 <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
                   <h4 className="text-[10px] font-black tracking-wider text-emerald-700 uppercase mb-3 flex items-center gap-1.5">
                     🤝 3. HR & Managerial Viva Questions
                   </h4>
                   <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    {placementCompaniesData[activeCompanyKey].hrTrivia.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                        <span className="text-emerald-400">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-emerald-400 font-bold">•</span>
+                      <span>Behavioral alignment queries tracking situational project collaboration frameworks specific to {selectedCompany}'s workplace metrics.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-emerald-400 font-bold">•</span>
+                      <span>ATS-optimized resume project walkthrough tips, impact vectors, and performance metric tracking.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5 leading-relaxed">
+                      <span className="text-emerald-400 font-bold">•</span>
+                      <span>Handling timeline constraints, cross-functional challenges, and tech-stack adaptations.</span>
+                    </li>
                   </ul>
                 </div>
 
