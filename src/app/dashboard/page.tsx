@@ -78,7 +78,7 @@ const universitiesData: Record<string, { logo: string; colleges: string[] }> = {
       "[Affiliated] Deccan College of Engineering and Technology (DCET)",
       "[Affiliated] Islamia College of Engineering and Technology",
       "[Affiliated] Neil Gogte Institute of Technology (NGIT)",
-      "[Affiliated] Keshav Memorial Engineering College",
+      "[@Affiliated] Keshav Memorial Engineering College",
       "[Affiliated] Lords Institute of Engineering and Technology",
       "[Affiliated] Gokaraju Lailavathi Womens Engineering College",
       "[Affiliated] ISL Engineering College",
@@ -95,7 +95,6 @@ const engineeringBranches = [
   { id: "IT", name: "Information Technology", icon: "🌐" }
 ];
 
-// Structural categorization layout for the corporate matrix
 const placementCategories = [
   { id: "dream", name: "🎯 Top Dream Companies", icon: "⭐" },
   { id: "software", name: "💻 Software & IT MNCs", icon: "⚙️" },
@@ -307,7 +306,6 @@ export default function StudentDashboard() {
 
   const activeBranchPyqs = selectedBranch ? (pastYearPapersRegistry[selectedBranch] || {}) : {};
 
-  // Auto-select first company when shifting categories
   const handleCategoryChange = (catKey: string) => {
     setActiveCategoryKey(catKey);
     const linkedCompanies = placementRegistry[catKey];
@@ -348,13 +346,13 @@ export default function StudentDashboard() {
             <button onClick={() => { setCurrentView("papers"); resetCascadeFilter(); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "papers" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>📄</span> Previous Papers
             </button>
-            <button onClick={() => setCurrentView("workspace")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "workspace" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
+            <button onClick={() => { setCurrentView("workspace"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "workspace" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>📚</span> Notes Workspace
             </button>
-            <button onClick={() => setCurrentView("ai")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "ai" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
+            <button onClick={() => { setCurrentView("ai"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "ai" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🤖</span> AI Study Engine
             </button>
-            <button onClick={() => setCurrentView("bookmarks")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "bookmarks" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
+            <button onClick={() => { setCurrentView("bookmarks"); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "bookmarks" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
               <span>🔖</span> Bookmarks
             </button>
 
@@ -738,13 +736,13 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 DYNAMIC MASTER MNC PLACEMENT MATRIX PORTAL */
+          /* 🔥 CLEAN, VISUAL PREPARATION GRID COMPLIANT WITH image_a3429b.jpg */
           <section className="space-y-6">
             <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
               <h3 className="text-sm font-black text-slate-900 mb-1">Company-Specific Placement Blueprints</h3>
               <p className="text-xs text-slate-400 mb-6">Select a target category pipeline and choose any MNC to parse quantitative trends, coding parameters, and interview blueprints.</p>
               
-              {/* Category Switching Strip layout */}
+              {/* Category Ribbon */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-slate-100 pb-4 mb-4">
                 {placementCategories.map((cat) => (
                   <button
@@ -762,7 +760,7 @@ export default function StudentDashboard() {
                 ))}
               </div>
 
-              {/* Sub-Company Horizontal Selector Ribbon */}
+              {/* Sub-Company Buttons */}
               <div className="flex gap-1.5 overflow-x-auto pb-3 border-b border-slate-100/80 mb-6">
                 {placementRegistry[activeCategoryKey]?.map((companyName) => (
                   <button
@@ -779,7 +777,7 @@ export default function StudentDashboard() {
                 ))}
               </div>
 
-              {/* Current Track Profile Overview Card */}
+              {/* Strategy Card */}
               <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs flex justify-between items-center">
                 <div>
                   <span className="font-bold text-slate-400 block uppercase tracking-wider text-[9px]">Target Track Strategy</span>
@@ -790,70 +788,52 @@ export default function StudentDashboard() {
                 </span>
               </div>
 
-              {/* Three-Tier Structural Cards Displaying Aptitude, Technical, and HR Panels */}
+              {/* Three-Tier Clean PDF Routing Panels */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* PANEL MODULE 1: APTITUDE & LOGICAL REASONING */}
-                <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
-                  <h4 className="text-[10px] font-black tracking-wider text-purple-700 uppercase mb-3 flex items-center gap-1.5">
-                    🧮 1. Aptitude & Logical Reasoning
-                  </h4>
-                  <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-purple-400 font-bold">•</span>
-                      <span>Quant patterns covering ratios, permutations, and compound interest formulas commonly mapped in {selectedCompany} online assessments.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-purple-400 font-bold">•</span>
-                      <span>Analytical syllogisms, matrix constraints, and data interpretation trend vectors.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-purple-400 font-bold">•</span>
-                      <span>Numerical logic arrays and verbal comprehensive reasoning checkpoints.</span>
-                    </li>
-                  </ul>
+                {/* TRACK 1: APTITUDE & LOGICAL REASONING */}
+                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
+                  <div>
+                    <h4 className="text-[10px] font-black tracking-wider text-purple-700 uppercase mb-2 flex items-center gap-1.5">
+                      🧮 1. Aptitude & Logical Reasoning
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      Quantitative pattern sets, ratio systems, permutations, and time equations mapped for {selectedCompany} online selection metrics.
+                    </p>
+                  </div>
+                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
+                    View Aptitude Blueprint PDF
+                  </button>
                 </div>
 
-                {/* PANEL MODULE 2: TECHNICAL & CODING ROUNDS */}
-                <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
-                  <h4 className="text-[10px] font-black tracking-wider text-indigo-700 uppercase mb-3 flex items-center gap-1.5">
-                    💻 2. Technical & Coding Rounds
-                  </h4>
-                  <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-indigo-400 font-bold">•</span>
-                      <span>Repeated data structure problems focused on linked list reversals, arrays, and sorting parameters for {selectedCompany}.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-indigo-400 font-bold">•</span>
-                      <span>Core object-oriented design metrics: Polymorphism, abstraction pillars, and compiler rules.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-indigo-400 font-bold">•</span>
-                      <span>DBMS structured query models, indexing benchmarks, and OS memory mapping fundamentals.</span>
-                    </li>
-                  </ul>
+                {/* TRACK 2: TECHNICAL & CODING ROUNDS */}
+                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
+                  <div>
+                    <h4 className="text-[10px] font-black tracking-wider text-indigo-700 uppercase mb-2 flex items-center gap-1.5">
+                      💻 2. Technical & Coding Rounds
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      Core DSA maps, recursion algorithms, OOP architecture parameters, and query trees compiled specifically for {selectedCompany} tech interviews.
+                    </p>
+                  </div>
+                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
+                    View Interview Questions PDF
+                  </button>
                 </div>
 
-                {/* PANEL MODULE 3: HR & MANAGERIAL QUESTIONS */}
-                <div className="p-5 border border-slate-200/60 rounded-2xl bg-white shadow-3xs flex flex-col">
-                  <h4 className="text-[10px] font-black tracking-wider text-emerald-700 uppercase mb-3 flex items-center gap-1.5">
-                    🤝 3. HR & Managerial Viva Questions
-                  </h4>
-                  <ul className="text-xs font-bold text-slate-700 space-y-3 pl-1 flex-1">
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-emerald-400 font-bold">•</span>
-                      <span>Behavioral alignment queries tracking situational project collaboration frameworks specific to {selectedCompany}'s workplace metrics.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-emerald-400 font-bold">•</span>
-                      <span>ATS-optimized resume project walkthrough tips, impact vectors, and performance metric tracking.</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 leading-relaxed">
-                      <span className="text-emerald-400 font-bold">•</span>
-                      <span>Handling timeline constraints, cross-functional challenges, and tech-stack adaptations.</span>
-                    </li>
-                  </ul>
+                {/* TRACK 3: HR & MANAGERIAL QUESTIONS */}
+                <div className="p-6 border border-slate-200/60 rounded-2xl bg-white shadow-2xs flex flex-col justify-between items-start min-h-[180px]">
+                  <div>
+                    <h4 className="text-[10px] font-black tracking-wider text-emerald-700 uppercase mb-2 flex items-center gap-1.5">
+                      🤝 3. HR & Managerial Questions
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      STAR scenario communication templates, company core values alignment matrices, and optimized presentation blueprints.
+                    </p>
+                  </div>
+                  <button className="mt-5 w-full bg-[#0F172A] hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition shadow-3xs">
+                    View HR & Resume Tips PDF
+                  </button>
                 </div>
 
               </div>
