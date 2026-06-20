@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { PaywallModal } from "../../components/ui/PaywallModal";
 import { AuthModal } from "../../components/ui/AuthModal";
 import { subjectBlueprintsRegistry, pastYearPapersRegistry, ExamNightPack } from "../../lib/subjectBlueprints";
@@ -113,18 +113,25 @@ const placementRegistry: Record<string, string[]> = {
   finance: ["JPMorgan Chase", "Goldman Sachs", "Morgan Stanley", "Deloitte", "KPMG", "EY", "PwC"]
 };
 
+interface CompanyFiles {
+  aptitudeUrl?: string;
+  aptitudeName?: string;
+  technicalUrl?: string;
+  technicalName?: string;
+  hrUrl?: string;
+  hrName?: string;
+}
+
 export default function StudentDashboard() {
   const [currentView, setCurrentView] = useState<"papers" | "workspace" | "ai" | "bookmarks" | "examNight" | "labs" | "placement">("papers");
   const [paperTabMode, setPaperTabMode] = useState<"notes" | "pyqs">("notes");
   const [cramMode, setCramMode] = useState(false);
   const [labDropdown, setLabDropdown] = useState(false);
   
-  // Account state structures
   const [userPlan, setUserPlan] = useState<"Free" | "Pro" | "Premium">("Free");
   const [availableCredits, setAvailableCredits] = useState(2);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   
-  // Authentication Trigger Handlers
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [activeUserEmail, setActiveUserEmail] = useState<string | null>(null);
   
@@ -141,11 +148,15 @@ export default function StudentDashboard() {
   const [generationStatus, setGenerationStatus] = useState<string>("");
   const [selectedLabYear, setSelectedLabYear] = useState<string | null>(null);
 
-  // Placements Section Category / Company State Toggles
+  // Placement States
   const [activeCategoryKey, setActiveCategoryKey] = useState<string>("dream");
   const [selectedCompany, setSelectedCompany] = useState<string>("Google");
+  
+  // Dynamic State Matrix mapping documents separately for each company
+  const [companyDocuments, setCompanyDocuments] = useState<Record<string, CompanyFiles>>({});
+  const [activeUploadTarget, setActiveUploadTarget] = useState<"aptitude" | "technical" | "hr" | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Bookmark Collections State
   const [bookmarkedPaperIds, setBookmarkedPaperIds] = useState<string[]>([]);
 
   const handleToggleBookmarkAsset = (paperId: string) => {
@@ -156,7 +167,6 @@ export default function StudentDashboard() {
     );
   };
 
-  // Live Supabase Verification Synchronization Hooks
   useEffect(() => {
     async function syncDatabaseProfile() {
       const structuralMockSessionId = "v1-vincent-test-uid-887";
@@ -314,6 +324,39 @@ export default function StudentDashboard() {
     }
   };
 
+  // Triggers input upload browser window element
+  const triggerPdfFileInput = (targetRound: "aptitude" | "technical" | "hr") => {
+    setActiveUploadTarget(targetRound);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Captures local document target arrays and saves them onto local state
+  const handlePdfUploadMapping = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeUploadTarget) return;
+
+    const dummyBlobUrl = URL.createObjectURL(file);
+    
+    setCompanyDocuments(prev => {
+      const existingData = prev[selectedCompany] || {};
+      return {
+        ...prev,
+        [selectedCompany]: {
+          ...existingData,
+          [`${activeUploadTarget}Url`]: dummyBlobUrl,
+          [`${activeUploadTarget}Name`]: file.name
+        }
+      };
+    });
+
+    setActiveUploadTarget(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const currentCompanyFiles = companyDocuments[selectedCompany] || {};
+
   return (
     <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
       cramMode ? "bg-[#120A0A] text-[#F5EBEB]" : "bg-[#F4F1E8] text-slate-800"
@@ -322,8 +365,17 @@ export default function StudentDashboard() {
       <PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} cramMode={cramMode} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(email) => setActiveUserEmail(email)} />
       
+      {/* Hidden PDF Upload Node Engine */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handlePdfUploadMapping} 
+        accept="application/pdf" 
+        className="hidden" 
+      />
+
       {/* SIDEBAR NAVIGATION PANEL */}
-      <aside className="bg-white border-r border-[#EBE8E0] p-6 hidden md:flex flex-col justify-between h-screen sticky top-0 w-64">
+      <aside className="bg-white border-r border-[#EBE8E0] p-6 hidden md:flex flex-col justify-between h-screen sticky top-0 w-64 shrink-0">
         <div className="space-y-6">
           <div className="leading-none flex justify-between items-start gap-2">
             <div>
@@ -377,8 +429,8 @@ export default function StudentDashboard() {
         </div>
       </aside>
 
-      {/* CORE WORKSPACE VIEWPORT */}
-      <div className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full flex flex-col transition-all duration-500">
+      {/* CORE WORKSPACE VIEWPORT - w-full to dynamically adjust layout bounds */}
+      <div className="flex-1 p-6 md:p-10 w-full flex flex-col transition-all duration-500 overflow-x-hidden">
         
         <header className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8 pb-4 border-b border-[#EBE8E0]">
           <h1 className="text-xl font-black tracking-tight text-slate-900">
@@ -430,7 +482,7 @@ export default function StudentDashboard() {
 
         {/* LAYOUT CANVAS ROUTER */}
         {currentView === "papers" ? (
-          <section className="space-y-6">
+          <section className="space-y-6 w-full">
             <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#EBE8E0]">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 <span className={!selectedUniv ? "text-slate-900" : ""}>1. UNIVERSITY</span>
@@ -443,7 +495,7 @@ export default function StudentDashboard() {
             </div>
 
             {!selectedUniv && (
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-4 w-full">
                 {Object.keys(universitiesData).map((univ) => (
                   <div key={univ} onClick={() => setSelectedUniv(univ)} className="border p-6 rounded-2xl transition bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer flex items-center gap-4">
                     <span className="text-2xl p-2 border bg-slate-50 border-slate-200 rounded-xl">{universitiesData[univ].logo}</span>
@@ -454,7 +506,7 @@ export default function StudentDashboard() {
             )}
 
             {selectedUniv && !selectedCollege && (
-              <div className="space-y-2 max-h-[400px] overflow-y-auto border border-[#EBE8E0] bg-white rounded-2xl p-3 shadow-2xs">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto border border-[#EBE8E0] bg-white rounded-2xl p-3 shadow-2xs w-full">
                 {universitiesData[selectedUniv].colleges.map((clg) => (
                   <div key={clg} onClick={() => setSelectedCollege(clg)} className="border p-3.5 rounded-xl bg-slate-50 hover:bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer text-xs font-bold text-slate-800 flex justify-between items-center transition-all">
                     <span>🏢 {clg}</span>
@@ -465,7 +517,7 @@ export default function StudentDashboard() {
             )}
 
             {selectedUniv && selectedCollege && !selectedBranch && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
                 {engineeringBranches.map((br) => (
                   <div key={br.id} onClick={() => setSelectedBranch(br.id)} className="border p-5 text-center bg-white border-[#EBE8E0] hover:border-slate-400 cursor-pointer transition rounded-2xl shadow-2xs">
                     <span className="text-xl block mb-1">{br.icon}</span>
@@ -476,14 +528,14 @@ export default function StudentDashboard() {
             )}
 
             {selectedUniv && selectedCollege && selectedBranch && (
-              <div className="space-y-4">
+              <div className="space-y-4 w-full">
                 <div className="flex gap-2 border-b border-[#EBE8E0] pb-2">
                   <button onClick={() => setPaperTabMode("notes")} className={`px-4 py-2 text-xs font-black rounded-lg ${paperTabMode === "notes" ? "bg-slate-900 text-white" : "text-slate-400"}`}>Regular Class Handouts</button>
                   <button onClick={() => setPaperTabMode("pyqs")} className={`px-4 py-2 text-xs font-black rounded-lg ${paperTabMode === "pyqs" ? "bg-indigo-600 text-white" : "text-indigo-500"}`}>📜 University PYQs</button>
                 </div>
 
                 {paperTabMode === "notes" ? (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                     {papers.length === 0 ? (
                       <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No class handouts found in database framework.</div>
                     ) : (
@@ -504,7 +556,7 @@ export default function StudentDashboard() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                     {Object.keys(activeBranchPyqs).length === 0 ? (
                       <div className="p-8 border rounded-2xl bg-white border-[#EBE8E0] text-slate-400 text-xs font-bold col-span-full text-center">No official university query logs discovered in registry layout.</div>
                     ) : (
@@ -535,8 +587,8 @@ export default function StudentDashboard() {
             )}
           </section>
         ) : currentView === "workspace" ? (
-          <section className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section className="space-y-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
               <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
@@ -600,8 +652,8 @@ export default function StudentDashboard() {
         ) : currentView === "ai" ? (
           <AiStudyEngine />
         ) : currentView === "bookmarks" ? (
-          <section className="space-y-6">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
+          <section className="space-y-6 w-full">
+            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
               <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
               <p className="text-xs text-slate-400 mb-6">Review your pinned university assets and saved documentation files.</p>
               
@@ -610,7 +662,7 @@ export default function StudentDashboard() {
                   📁 Your saved bookmarks collection is currently empty. Click the star button on any study material or paper to pin it here.
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                   {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
                     <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
                       <div className="flex justify-between items-start gap-2">
@@ -644,15 +696,15 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "labs" ? (
-          <section className="space-y-6">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs">
+          <section className="space-y-6 w-full">
+            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
               <h3 className="text-sm font-black text-slate-900 mb-1">
                 Engineering Laboratory Practicals — {selectedLabYear === "1" ? "1st Year Syllabus" : "2nd Year Syllabus"}
               </h3>
               <p className="text-xs text-slate-400 mb-6">Access procedure guidelines, script configurations, and viva logs.</p>
               
               {selectedLabYear === "1" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                   <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
                     <span className="text-xs font-black text-slate-800 block">🔌 Basic Electrical Engineering Lab (BEE)</span>
                     <span className="text-[10px] text-slate-400 font-bold mt-1 block">KVL/KCL Verifications & Circuit Manifests</span>
@@ -663,7 +715,7 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                   <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0] hover:border-slate-400 transition-all cursor-pointer">
                     <span className="text-xs font-black text-slate-800 block">💻 Computer Oriented Statistical Methods Lab (COSM)</span>
                     <span className="text-[10px] text-slate-400 font-bold mt-1 block">Python Analytics & Probability Testing Scripts</span>
@@ -677,8 +729,8 @@ export default function StudentDashboard() {
             </div>
           </section>
         ) : currentView === "examNight" && activePackData ? (
-          <section className="space-y-6">
-            <div className="p-6 bg-[#0a0d1d] border border-slate-900 rounded-3xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <section className="space-y-6 w-full">
+            <div className="p-6 bg-[#0a0d1d] border border-slate-900 rounded-3xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
               <div>
                 <h3 className="text-sm font-black text-white">{activePackData.subjectName} Pack</h3>
                 <p className="text-xs text-slate-400 mt-0.5">High-probability study maps unlocked successfully.</p>
@@ -691,7 +743,7 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
               <div className="bg-white border border-[#EBE8E0] p-6 rounded-2xl shadow-3xs">
                 <h3 className="text-xs font-black text-red-500 uppercase">🎯 Section 1: Top 15 Must-Study Questions</h3>
                 <ol className="text-xs font-bold text-slate-700 space-y-2.5 list-decimal list-inside mt-3">
@@ -736,43 +788,43 @@ export default function StudentDashboard() {
             </button>
           </section>
         ) : currentView === "placement" ? (
-          /* 🔥 PREMIUM GLASS-DARK SECTOR INTERFACE FOR CORPORATE BLUEPRINTS */
-          <section className="space-y-6">
-            <div className="p-6 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative overflow-hidden">
+          /* 🔥 FULLY ADJUSTED RESPONSIVE PRO-LEVEL PLACEMENT HUD CONTAINER */
+          <section className="w-full">
+            <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
               
               <div className="mb-6">
                 <h3 className="text-base font-black tracking-wide text-white">Company-Specific Placement Blueprints</h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                <p className="text-xs text-slate-400 mt-1">
                   Select a corporate channel to query target analytical trends, runtime coding parameters, and ATS verification matrices.
                 </p>
               </div>
               
-              {/* Domain Category Selector Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 border-b border-slate-800/80 pb-4 mb-4">
+              {/* Responsive Category Wrapping Strip */}
+              <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
                 {placementCategories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`px-3 py-2 text-left rounded-xl transition-all border text-[11px] font-bold flex items-center gap-1.5 ${
+                    className={`px-3 py-2 rounded-xl transition-all border text-[11px] font-bold flex items-center gap-1.5 ${
                       activeCategoryKey === cat.id 
                         ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
                         : "bg-slate-900/40 text-slate-400 border-slate-800/60 hover:border-slate-700 hover:text-white"
                     }`}
                   >
                     <span>{cat.icon}</span>
-                    <span className="truncate">{cat.name}</span>
+                    <span>{cat.name}</span>
                   </button>
                 ))}
               </div>
 
               {/* Sub-Company Ribbon */}
-              <div className="flex gap-2 overflow-x-auto pb-3 border-b border-slate-800/80 mb-6 scrollbar-thin scrollbar-thumb-slate-800">
+              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
                 {placementRegistry[activeCategoryKey]?.map((companyName) => (
                   <button
                     key={companyName}
                     onClick={() => setSelectedCompany(companyName)}
-                    className={`px-3.5 py-1.5 text-[11px] font-black rounded-xl transition-all whitespace-nowrap border ${
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-xl transition-all border ${
                       selectedCompany === companyName
                         ? "bg-white text-slate-950 border-white shadow-lg"
                         : "bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
@@ -784,7 +836,7 @@ export default function StudentDashboard() {
               </div>
 
               {/* Active Asset Metadata Banner */}
-              <div className="mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800/60 text-xs flex justify-between items-center backdrop-blur-md">
+              <div className="mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800/60 text-xs flex justify-between items-center backdrop-blur-md w-full">
                 <div>
                   <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">Target Channel Node</span>
                   <span className="font-black text-white text-sm mt-0.5">{selectedCompany} Operational Hub</span>
@@ -795,73 +847,115 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Three-Tier PDF Document Integration Matrix Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Responsive Preparation Blueprint Grid Container */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                 
-                {/* ADVANCED TRACK MODULE 1 */}
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                {/* 1. QUANT ROUND PIPELINE BOX */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-[10px] font-black tracking-wider text-purple-400 uppercase flex items-center gap-1.5">
+                      <h4 className="text-[10px] font-black tracking-wider text-purple-400 uppercase">
                         🧮 1. Aptitude & Logic
                       </h4>
-                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-purple-400 transition-colors">v1.4.0</span>
+                      <span className="text-[9px] font-mono text-slate-500">v1.4.0</span>
                     </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Quantitative matrices, profit algorithms, numerical logic distributions, and analytical reasoning vectors compiled for {selectedCompany}.
+                      {currentCompanyFiles.aptitudeName 
+                        ? `Loaded Asset: ${currentCompanyFiles.aptitudeName}` 
+                        : `Upload quantitative sheets or logic constraints optimized for ${selectedCompany}.`}
                     </p>
-                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
-                      <span>File Size: ~2.4 MB</span>
-                      <span className="text-slate-600">SHA-256 Verified</span>
-                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-purple-500/30">
-                    Open Aptitude Document
-                  </button>
+                  <div className="mt-5 w-full flex flex-col gap-2">
+                    {currentCompanyFiles.aptitudeUrl ? (
+                      <a 
+                        href={currentCompanyFiles.aptitudeUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="w-full bg-indigo-600 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl text-center block shadow-md"
+                      >
+                        Open Aptitude Document
+                      </a>
+                    ) : (
+                      <button 
+                        onClick={() => triggerPdfFileInput("aptitude")}
+                        className="w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition"
+                      >
+                        ➕ Upload Aptitude PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* ADVANCED TRACK MODULE 2 */}
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                {/* 2. TECHNICAL & CODING ROUND PIPELINE BOX */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-[10px] font-black tracking-wider text-indigo-400 uppercase flex items-center gap-1.5">
+                      <h4 className="text-[10px] font-black tracking-wider text-indigo-400 uppercase">
                         💻 2. Technical & Coding
                       </h4>
-                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-indigo-400 transition-colors">v3.1.2</span>
+                      <span className="text-[9px] font-mono text-slate-500">v3.1.2</span>
                     </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Data structure traversal structures, string matching blueprints, normalization rules, and runtime scripts optimized for technical validation.
+                      {currentCompanyFiles.technicalName 
+                        ? `Loaded Asset: ${currentCompanyFiles.technicalName}` 
+                        : `Upload data structure code sheets and technical pools optimized for ${selectedCompany}.`}
                     </p>
-                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
-                      <span>File Size: ~4.1 MB</span>
-                      <span className="text-slate-600">SHA-256 Verified</span>
-                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-indigo-500/30">
-                    Open Technical Blueprint
-                  </button>
+                  <div className="mt-5 w-full flex flex-col gap-2">
+                    {currentCompanyFiles.technicalUrl ? (
+                      <a 
+                        href={currentCompanyFiles.technicalUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="w-full bg-indigo-600 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl text-center block shadow-md"
+                      >
+                        Open Technical Blueprint
+                      </a>
+                    ) : (
+                      <button 
+                        onClick={() => triggerPdfFileInput("technical")}
+                        className="w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition"
+                      >
+                        ➕ Upload Technical PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* ADVANCED TRACK MODULE 3 */}
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between items-start min-h-[220px] transition-all hover:border-slate-700 group">
+                {/* 3. HR & VERBAL ROUND PIPELINE BOX */}
+                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 shadow-inner flex flex-col justify-between min-h-[220px] transition-all hover:border-slate-700 group">
                   <div className="w-full">
                     <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-[10px] font-black tracking-wider text-emerald-400 uppercase flex items-center gap-1.5">
+                      <h4 className="text-[10px] font-black tracking-wider text-emerald-400 uppercase">
                         🤝 3. HR & Behavioral
                       </h4>
-                      <span className="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400 transition-colors">v2.0.1</span>
+                      <span className="text-[9px] font-mono text-slate-500">v2.0.1</span>
                     </div>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      STAR framework scenario logs, contextual project leadership dialogues, and presentation keyword vectors tailored for corporate review lines.
+                      {currentCompanyFiles.hrName 
+                        ? `Loaded Asset: ${currentCompanyFiles.hrName}` 
+                        : `Upload behavioral assessment scripts and core talking roadmaps optimized for ${selectedCompany}.`}
                     </p>
-                    <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between text-[10px] font-mono text-slate-500 font-bold">
-                      <span>File Size: ~1.8 MB</span>
-                      <span className="text-slate-600">SHA-256 Verified</span>
-                    </div>
                   </div>
-                  <button className="mt-5 w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white text-[10px] font-black tracking-wide uppercase py-3 rounded-xl transition shadow-md group-hover:border-emerald-500/30">
-                    Open Behavioral Guide
-                  </button>
+                  <div className="mt-5 w-full flex flex-col gap-2">
+                    {currentCompanyFiles.hrUrl ? (
+                      <a 
+                        href={currentCompanyFiles.hrUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="w-full bg-indigo-600 text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl text-center block shadow-md"
+                      >
+                        Open Behavioral Guide
+                      </a>
+                    ) : (
+                      <button 
+                        onClick={() => triggerPdfFileInput("hr")}
+                        className="w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white text-[10px] font-black tracking-wide uppercase py-2.5 rounded-xl transition"
+                      >
+                        ➕ Upload HR & Resume PDF
+                      </button>
+                    )}
+                  </div>
                 </div>
 
               </div>
