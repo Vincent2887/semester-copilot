@@ -10,7 +10,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Live Google GenAI integration
-client = genai.Client()
+# Replace line 13 in your app.py with your direct key token parameter:
+client = genai.Client(api_key="AQ.Ab8RN6Jg7DYFkB5alc__vutQ1_YN0D5M-fffmymN2yvHV7WWJA")
 
 @app.route('/api/generate-notes', methods=['POST'])
 def handle_notes_generation():
