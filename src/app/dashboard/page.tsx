@@ -116,13 +116,23 @@ interface CompanyFiles {
   hrName?: string;
 }
 
-export default function StudentDashboard() {
-  const [currentView, setCurrentView] = useState<"papers" | "workspace" | "ai" | "bookmarks" | "examNight" | "labs" | "placement" | "notesGenerator">("papers");
+interface PageProps {
+  currentView?: string;
+  setCurrentView?: (view: string) => void;
+  currentPlan?: "Free" | "Pro" | "Premium";
+  setCurrentPlan?: (plan: "Free" | "Pro" | "Premium") => void;
+}
+
+export default function StudentDashboard({ 
+  currentView = "papers", 
+  setCurrentView, 
+  currentPlan = "Free", 
+  setCurrentPlan 
+}: PageProps) {
   const [paperTabMode, setPaperTabMode] = useState<"notes" | "pyqs">("notes");
   const [cramMode, setCramMode] = useState(false);
-  const [labDropdown, setLabDropdown] = useState(false);
   
-  const [userPlan, setUserPlan] = useState<"Free" | "Pro" | "Premium">("Free");
+  const [userPlan, setUserPlan] = useState<"Free" | "Pro" | "Premium">(currentPlan);
   const [availableCredits, setAvailableCredits] = useState(2);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   
@@ -155,6 +165,10 @@ export default function StudentDashboard() {
 
   const [bookmarkedPaperIds, setBookmarkedPaperIds] = useState<string[]>([]);
 
+  useEffect(() => {
+    setUserPlan(currentPlan);
+  }, [currentPlan]);
+
   const handleToggleBookmarkAsset = (paperId: string) => {
     setBookmarkedPaperIds((prevIds) =>
       prevIds.includes(paperId)
@@ -172,13 +186,14 @@ export default function StudentDashboard() {
         if (profile && !error) {
           setUserPlan(profile.plan);
           setAvailableCredits(profile.credits);
+          if (setCurrentPlan) setCurrentPlan(profile.plan);
         }
       } catch (syncError) {
         console.warn("Operating profile dashboard in safe fallback/local mode.");
       }
     }
     syncDatabaseProfile();
-  }, []);
+  }, [setCurrentPlan]);
 
   useEffect(() => {
     if (selectedUniv && selectedCollege && selectedBranch) {
@@ -229,17 +244,6 @@ export default function StudentDashboard() {
     }
   }
 
-  const handleAccessResourceAsset = (e: React.MouseEvent, fileUrl: string) => {
-    if (userPlan === "Free" && availableCredits <= 0) {
-      e.preventDefault();
-      setIsPaywallOpen(true);
-      return;
-    }
-    if (userPlan === "Free") {
-      setAvailableCredits(prev => prev - 1);
-    }
-  };
-
   const handleGeneratePredictivePack = async (subjectKey: string) => {
     if (userPlan === "Free" && availableCredits < 5) {
       setIsPaywallOpen(true);
@@ -248,10 +252,7 @@ export default function StudentDashboard() {
 
     setSelectedSubjectKey(subjectKey);
     setGeneratingPack(true);
-    
-    setGenerationStatus("Analyzing previous JNTUH query logs...");
-    const t1 = setTimeout(() => setGenerationStatus("Parsing R22 regulation unit core matrices..."), 800);
-    const t2 = setTimeout(() => setGenerationStatus("Synthesizing high-probability formula clusters..."), 1500);
+    setGenerationStatus("Analyzing query records...");
 
     try {
       const response = await fetch("/api/exam-pack", {
@@ -266,7 +267,7 @@ export default function StudentDashboard() {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Generation error encountered.");
+      if (!response.ok) throw new Error(result.error || "Generation error.");
 
       if (result.data) {
         setActivePackData(result.data);
@@ -278,20 +279,18 @@ export default function StudentDashboard() {
       if (userPlan === "Free") {
         setAvailableCredits(result.remainingCredits !== undefined ? result.remainingCredits : (prev => prev - 5));
       }
-      setCurrentView("examNight");
+      if (setCurrentView) setCurrentView("examNight");
 
     } catch (err: any) {
       const fallbackPack = subjectBlueprintsRegistry[selectedBranch || "CSE"]?.[subjectKey];
       if (fallbackPack) {
         if (userPlan === "Free") setAvailableCredits(prev => prev - 5);
         setActivePackData(fallbackPack);
-        setCurrentView("examNight");
+        if (setCurrentView) setCurrentView("examNight");
       } else {
-        alert(err.message || "Could not synthesize exam night assets.");
+        alert(err.message || "Could not synthesize assets.");
       }
     } finally {
-      clearTimeout(t1);
-      clearTimeout(t2);
       setGeneratingPack(false);
       setGenerationStatus("");
     }
@@ -303,8 +302,6 @@ export default function StudentDashboard() {
     setSelectedBranch(null);
     setPapers([]);
   };
-
-  const activeBranchPyqs = selectedBranch ? (pastYearPapersRegistry[selectedBranch] || {}) : {};
 
   const handleCategoryChange = (catKey: string) => {
     setActiveCategoryKey(catKey);
@@ -338,7 +335,7 @@ export default function StudentDashboard() {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Upload pipeline failed.");
+      if (!response.ok) throw new Error(result.error || "Upload failed.");
 
       setCompanyDocuments(prev => {
         const existingData = prev[selectedCompany] || {};
@@ -353,7 +350,7 @@ export default function StudentDashboard() {
       });
 
     } catch (err: any) {
-      alert(err.message || "Failed to parse attachment logic.");
+      alert(err.message || "Upload logic failed.");
     } finally {
       setLoading(false);
       setActiveUploadTarget(null);
@@ -378,10 +375,9 @@ export default function StudentDashboard() {
       if (res.ok && data.success) {
         setGeneratedNotesContent(data.content);
       } else {
-        throw new Error(data.error || "AI Generation error.");
+        throw new Error(data.error || "AI Error.");
       }
     } catch (err) {
-      console.warn("Flask server connection dropped, using verified mock processing generation layer structures.");
       setGeneratedNotesContent(`## 📄 Comprehensive Study Notes: ${notesTopic.toUpperCase()}
         
 ### 🔑 Core Fundamentals & Concepts
@@ -406,306 +402,315 @@ Ensure documentation caches remain flushed to bypass execution constraints smoot
   const currentCompanyFiles = companyDocuments[selectedCompany] || {};
 
   return (
-    <main className={`min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-500 ${
-      cramMode ? "bg-[#120A0A] text-[#F5EBEB]" : "bg-[#F4F1E8] text-slate-800"
-    }`}>
+    <div className={`w-full transition-all duration-500 ${cramMode ? "text-[#F5EBEB]" : "text-slate-800"}`}>
       
       <PaywallModal isOpen={isPaywallOpen} onClose={() => setIsPaywallOpen(false)} cramMode={cramMode} />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(email) => setActiveUserEmail(email)} />
       
       <input type="file" ref={fileInputRef} onChange={handlePdfUploadMapping} accept="application/pdf" className="hidden" />
 
-      {/* SIDEBAR NAVIGATION PANEL */}
-      <aside className="bg-white border-r border-[#EBE8E0] p-6 hidden md:flex flex-col justify-between h-screen sticky top-0 w-64 shrink-0">
-        <div className="space-y-6">
-          <div className="leading-none flex justify-between items-start gap-2">
-            <div>
-              <span className="font-serif font-bold text-lg text-slate-900 block">Topperdeck</span>
-              <span className="text-[9px] font-black tracking-widest uppercase text-slate-400 mt-1.5 block max-w-[130px] truncate">
-                {activeUserEmail ? `👤 ${activeUserEmail.split("@")[0]}` : "CRACK THE EXAM"}
+      {/* CREDIT WALLET MODULE */}
+      <div className="mb-6 p-4 px-5 rounded-2xl border bg-white border-[#EBE8E0] text-slate-800 flex justify-between items-center text-xs font-bold shadow-2xs">
+        <span className="flex items-center gap-2">
+          <span>💳</span> Account Tier: <span className="text-indigo-600 font-black uppercase">{userPlan} Plan</span> 
+          <span className="text-slate-300">|</span> 
+          Balance: {userPlan === "Premium" ? "∞ Unlimited" : `${availableCredits} Credits`}
+        </span>
+        {userPlan === "Free" && (
+          <button onClick={() => setIsPaywallOpen(true)} className="text-[10px] font-mono font-black text-purple-600 uppercase underline bg-transparent border-none cursor-pointer">Upgrade Plan</button>
+        )}
+      </div>
+
+      {/* 🔥 REAL VISUAL EXAM NIGHT BANNER MATCHING PREFERENCES PERFECTLY */}
+      {currentView !== "examNight" && currentView !== "placement" && currentView !== "notesGenerator" && currentView !== "home" && (
+        <div 
+          style={{ backgroundImage: 'linear-gradient(135deg, #FF4D30 0%, #FF6F3C 45%, #6366F1 100%)' }}
+          className="mb-8 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
+        >
+          {/* Left Action and Detail Matrix Section */}
+          <div className="lg:col-span-6 space-y-4 relative z-10">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1 bg-[#FACC15] px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase text-slate-900 shadow-2xs">
+                ⭐ MOST USED FEATURE
               </span>
-            </div>
-          </div>
-
-          <nav className="space-y-1">
-            <button onClick={() => { setCurrentView("papers"); resetCascadeFilter(); }} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "papers" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>📄</span> Previous Papers
-            </button>
-            <button onClick={() => setCurrentView("workspace")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "workspace" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>📚</span> Notes Workspace
-            </button>
-            <button onClick={() => setCurrentView("ai")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "ai" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>🤖</span> AI Study Engine
-            </button>
-            <button onClick={() => setCurrentView("bookmarks")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "bookmarks" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>🔖</span> Bookmarks
-            </button>
-            <button onClick={() => setCurrentView("placement")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "placement" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>🧠</span> Placement Hub
-            </button>
-            
-            {/* 🤖 NEW AI NOTES GENERATOR SIDEBAR MENU LINK SECTOR */}
-            <button onClick={() => setCurrentView("notesGenerator")} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${currentView === "notesGenerator" ? "bg-[#F4F1E8] text-slate-900 border border-[#EBE8E0]" : "text-slate-500 hover:bg-slate-50"}`}>
-              <span>✨</span> AI Notes Generator
-            </button>
-
-            <div>
-              <button onClick={() => setLabDropdown(!labDropdown)} className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">
-                <div className="flex items-center gap-3"><span>🧪</span> Lab Practicals</div>
-                <span className="text-[10px]">{labDropdown ? "▲" : "▼"}</span>
-              </button>
-              {labDropdown && (
-                <div className="pl-9 mt-1 space-y-1">
-                  <button onClick={() => { setCurrentView("labs"); setSelectedLabYear("1"); }} className="w-full text-left py-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-900 block">• 1st Year</button>
-                  <button onClick={() => { setCurrentView("labs"); setSelectedLabYear("2"); }} className="w-full text-left py-1.5 text-[11px] font-bold text-slate-400 hover:text-slate-900 block">• 2nd Year</button>
-                </div>
-              )}
-            </div>
-          </nav>
-        </div>
-      </aside>
-
-      {/* CORE WORKSPACE VIEWPORT */}
-      <div className="flex-1 p-6 md:p-10 w-full flex flex-col transition-all duration-500 overflow-x-hidden">
-        
-        <header className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8 pb-4 border-b border-[#EBE8E0]">
-          <h1 className="text-xl font-black tracking-tight text-slate-900">
-            {currentView === "notesGenerator" ? "✨ AI Notes Synthesizer" : currentView === "placement" ? "💼 Corporate Placement Blueprints" : "Dashboard Workspace"}
-          </h1>
-          <button onClick={() => setCramMode(!cramMode)} className="px-4 py-2 text-xs font-bold bg-white border border-[#EBE8E0] rounded-xl">Toggle Canvas Light</button>
-        </header>
-
-        {/* CREDIT WALLET MODULE */}
-        <div className="mb-6 p-4 px-5 rounded-2xl border bg-white border-[#EBE8E0] text-slate-800 flex justify-between items-center text-xs font-bold shadow-2xs">
-          <span className="flex items-center gap-2">
-            <span>💳</span> Account Tier: <span className="text-indigo-600 font-black uppercase">{userPlan} Plan</span> 
-            <span className="text-slate-300">|</span> 
-            Balance: {userPlan === "Premium" ? "∞ Unlimited" : `${availableCredits} Credits`}
-          </span>
-          {userPlan === "Free" && (
-            <button onClick={() => setIsPaywallOpen(true)} className="text-[10px] font-mono font-black text-purple-600 uppercase underline">Upgrade Plan</button>
-          )}
-        </div>
-
-        {/* HERO CRAM BANNER */}
-        {currentView !== "examNight" && currentView !== "placement" && currentView !== "notesGenerator" && (
-          <div className="mb-8 p-6 rounded-3xl bg-gradient-to-br from-red-500 via-orange-500 to-indigo-600 text-white shadow-xl space-y-4 relative overflow-hidden">
-            <div className="space-y-1 relative z-10">
-              <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase text-white">
-                💎 Premium Feature • Most Used ⭐
-              </span>
-              <h2 className="text-xl font-black tracking-tight pt-1">🚨 EXAM TOMORROW?</h2>
-              <p className="text-xs text-white/90 max-w-xl">
-                Skip the 300-page textbooks and 100 long video clips. Get exactly what you need to clear your upcoming unit criteria smoothly.
+              <h2 className="text-xl font-black tracking-tight pt-1 flex items-center gap-2">
+                🚨 EXAM TOMORROW?
+              </h2>
+              <p className="text-xs text-white/95 max-w-md leading-relaxed font-medium">
+                Get everything you need to revise smartly and score high. Skip the long textbooks and notes entirely.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2 relative z-10">
+
+            {/* Badges Toolbar Grid Linkage */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="px-3 py-1.5 text-[10px] font-bold bg-[#FF6F3C] hover:bg-orange-600 transition rounded-lg border border-white/20 cursor-pointer flex items-center gap-1 shadow-sm">
+                🔥 Important Questions
+              </span>
+              <span className="px-3 py-1.5 text-[10px] font-bold bg-white/15 hover:bg-white/25 transition rounded-lg border border-white/10 cursor-pointer flex items-center gap-1">
+                📄 Short Notes
+              </span>
+              <span className="px-3 py-1.5 text-[10px] font-bold bg-white/15 hover:bg-white/25 transition rounded-lg border border-white/10 cursor-pointer flex items-center gap-1">
+                📝 MCQs
+              </span>
+              <span className="px-3 py-1.5 text-[10px] font-bold bg-white/15 hover:bg-white/25 transition rounded-lg border border-white/10 cursor-pointer flex items-center gap-1">
+                🎙️ Viva Questions
+              </span>
+            </div>
+
+            {/* Main Generation Primary Trigger CTA */}
+            <div className="pt-2 flex items-center gap-3">
               <button 
                 onClick={() => handleGeneratePredictivePack("dbms")} 
                 disabled={generatingPack} 
-                className="bg-white text-slate-900 text-xs font-black px-5 py-3 rounded-xl shadow-md hover:bg-slate-50 transition cursor-pointer min-w-[280px]"
+                className="bg-white hover:bg-slate-50 text-slate-900 text-xs font-black px-5 py-3 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2 border-none"
               >
-                {generatingPack ? `✨ ${generationStatus}` : "🔥 Generate Exam Night Pack (5 Credits)"}
+                👑 {generatingPack ? generationStatus : "Unlock Full Exam Night Pack"} 🔒
               </button>
+              <span className="text-[10px] font-bold text-white/80 tracking-wide">← Available in PRO Plan</span>
             </div>
-            <div className="absolute right-0 bottom-0 text-white/5 font-serif font-black text-8xl translate-y-4 select-none pointer-events-none">PASS</div>
           </div>
-        )}
 
-        {/* LAYOUT CANVAS ROUTER */}
-        {currentView === "papers" ? (
-          <section className="space-y-6 w-full">
-            <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#EBE8E0]">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                <span className={!selectedUniv ? "text-slate-900" : ""}>1. UNIVERSITY</span>
-                {selectedUniv && <span> &gt; <span className={!selectedCollege ? "text-slate-900" : ""}>2. COLLEGE</span></span>}
-                {selectedCollege && <span> &gt; <span className={!selectedBranch ? "text-slate-900" : ""}>3. BRANCH</span></span>}
+          {/* Middle Real Interactive Floating Preview Block Card */}
+          <div className="lg:col-span-3 bg-white text-slate-800 rounded-2xl p-4 shadow-lg border border-white/20 relative z-10 min-h-[140px] flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[8px] bg-rose-100 text-rose-700 font-black uppercase tracking-wider px-2 py-0.5 rounded-md">PREVIEW</span>
+              </div>
+              <h4 className="text-[11px] font-black text-slate-900 tracking-tight">DBMS – Important Questions (Preview)</h4>
+              <ol className="text-[10px] font-semibold text-slate-500 mt-2 space-y-1 list-decimal list-inside">
+                <li>What is Normalization?</li>
+                <li>Explain ACID Properties.</li>
+                <li>What is Transaction Management?</li>
+              </ol>
+            </div>
+            <div className="w-full h-[1px] bg-slate-100 my-2 border-none" />
+            <button onClick={() => handleGeneratePredictivePack("dbms")} className="w-full text-indigo-600 hover:text-indigo-800 transition font-black text-[9px] uppercase tracking-wider text-left bg-transparent border-none cursor-pointer flex items-center gap-1">
+              🔒 Unlock 15+ More Questions
+            </button>
+          </div>
+
+          {/* Right Upsell Incentive Visual Callout Segment */}
+          <div className="lg:col-span-3 text-white space-y-3 relative z-10 border-l border-white/10 pl-4 hidden lg:block">
+            <h4 className="text-xs font-black tracking-tight text-white flex items-center gap-1">👑 Why Upgrade?</h4>
+            <ul className="text-[10px] font-bold space-y-1.5 text-white/90">
+              <li className="flex items-center gap-1.5">✓ Full Exam Pack (100+ Qs)</li>
+              <li className="flex items-center gap-1.5">✓ Short Notes</li>
+              <li className="flex items-center gap-1.5">✓ MCQs</li>
+              <li className="flex items-center gap-1.5">✓ Viva Questions</li>
+            </ul>
+            <button onClick={() => setIsPaywallOpen(true)} className="w-full bg-[#FF6F3C] hover:bg-orange-600 text-white font-black text-[10px] tracking-wide py-2.5 rounded-xl mt-2 transition border-none shadow-sm cursor-pointer flex items-center justify-center gap-1">
+              Upgrade to Pro 👑
+            </button>
+          </div>
+
+          {/* Backdrop Large Text Label */}
+          <div className="absolute right-0 bottom-0 text-white/5 font-serif font-black text-8xl translate-y-4 select-none pointer-events-none">PASS</div>
+        </div>
+      )}
+
+      {/* LAYOUT CANVAS ROUTER */}
+      {currentView === "home" ? (
+        <section className="space-y-6 w-full">
+          <div className="p-8 rounded-3xl border bg-white border-[#EBE8E0] text-center shadow-2xs">
+            <span className="text-3xl block mb-2">🏠</span>
+            <h3 className="text-sm font-black text-slate-900">Welcome back to Topperdeck Workspace Node</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+              Select any workspace asset catalog module directly from the left control navigation matrix node layer.
+            </p>
+          </div>
+        </section>
+      ) : currentView === "papers" ? (
+        <section className="space-y-6 w-full">
+          <div className="flex items-center justify-between p-4 rounded-xl border bg-white border-[#EBE8E0]">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className={!selectedUniv ? "text-slate-900" : ""}>1. UNIVERSITY</span>
+              {selectedUniv && <span> &gt; <span className={!selectedCollege ? "text-slate-900" : ""}>2. COLLEGE</span></span>}
+              {selectedCollege && <span> &gt; <span className={!selectedBranch ? "text-slate-900" : ""}>3. BRANCH</span></span>}
+            </div>
+          </div>
+
+          {!selectedUniv && (
+            <div className="grid sm:grid-cols-2 gap-4 w-full">
+              {Object.keys(universitiesData).map((univ) => (
+                <div key={univ} onClick={() => setSelectedUniv(univ)} className="border p-6 rounded-2xl bg-white border-[#EBE8E0] cursor-pointer flex items-center gap-4 hover:border-indigo-300 transition shadow-2xs">
+                  <span className="text-2xl p-2 bg-slate-50 rounded-xl">{universitiesData[univ].logo}</span>
+                  <h4 className="font-bold text-sm text-slate-900">{univ}</h4>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : currentView === "workspace" ? (
+        <section className="space-y-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+            <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50/50 cursor-pointer">
+                  <span className="text-xl block mb-1">📤</span>
+                  <p className="text-[11px] font-bold text-slate-700">Drag & drop files or click to browse</p>
+                </div>
               </div>
             </div>
-
-            {!selectedUniv && (
-              <div className="grid sm:grid-cols-2 gap-4 w-full">
-                {Object.keys(universitiesData).map((univ) => (
-                  <div key={univ} onClick={() => setSelectedUniv(univ)} className="border p-6 rounded-2xl bg-white border-[#EBE8E0] cursor-pointer flex items-center gap-4">
-                    <span className="text-2xl p-2 bg-slate-50 rounded-xl">{universitiesData[univ].logo}</span>
-                    <h4 className="font-bold text-sm text-slate-900">{univ}</h4>
+          </div>
+        </section>
+      ) : currentView === "ai" ? (
+        <AiStudyEngine />
+      ) : currentView === "bookmarks" ? (
+        <section className="space-y-6 w-full">
+          <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
+            <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
+            {bookmarkedPaperIds.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-400 font-bold">📁 Your saved bookmarks collection is empty.</div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
+                  <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
+                    <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
+                    <a href={paper.file_url} target="_blank" rel="noreferrer" className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
                   </div>
                 ))}
               </div>
             )}
-          </section>
-        ) : currentView === "workspace" ? (
-          <section className="space-y-6 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
-              <div className="lg:col-span-1 p-6 bg-white border border-[#EBE8E0] rounded-2xl flex flex-col justify-between">
+          </div>
+        </section>
+      ) : currentView === "labs" ? (
+        <section className="space-y-6 w-full">
+          <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl w-full">
+            <h3 className="text-sm font-black text-slate-900 mb-1">Laboratory Practicals — {selectedLabYear === "1" ? "1st Year" : "2nd Year"}</h3>
+            <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0]">
+              <span className="text-xs font-black text-slate-800 block">🔌 Core Laboratory Practicals Module Mapping Node</span>
+            </div>
+          </div>
+        </section>
+      ) : currentView === "placement" ? (
+        <section className="w-full">
+          <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
+            <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
+              {placementCategories.map((cat) => (
+                <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`px-4 py-2.5 rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${activeCategoryKey === cat.id ? "bg-indigo-600 text-white border-indigo-500" : "bg-slate-900/40 text-slate-400 border-slate-800/60"}`}>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
+              {placementRegistry[activeCategoryKey]?.map((name) => (
+                <button key={name} onClick={() => setSelectedCompany(name)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${selectedCompany === name ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400 border-slate-800"}`}>
+                  🏢 {name}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
+                <h4 className="text-[10px] font-black text-purple-400 uppercase">🧮 1. Aptitude & Logic</h4>
+                <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.aptitudeName || "Empty File Buffer Slot"}</p>
+                <button onClick={() => triggerPdfFileInput("aptitude")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                  {currentCompanyFiles.aptitudeUrl ? "📄 View Document" : "➕ Upload Aptitude PDF"}
+                </button>
+              </div>
+              <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
+                <h4 className="text-[10px] font-black text-indigo-400 uppercase">💻 2. Technical & Coding</h4>
+                <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.technicalName || "Empty File Buffer Slot"}</p>
+                <button onClick={() => triggerPdfFileInput("technical")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                  {currentCompanyFiles.technicalUrl ? "📄 View Document" : "➕ Upload Technical PDF"}
+                </button>
+              </div>
+              <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
+                <h4 className="text-[10px] font-black text-emerald-400 uppercase">🤝 3. HR & Behavioral</h4>
+                <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.hrName || "Empty File Buffer Slot"}</p>
+                <button onClick={() => triggerPdfFileInput("hr")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
+                  {currentCompanyFiles.hrUrl ? "📄 View Document" : "➕ Upload HR PDF"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : currentView === "notesGenerator" ? (
+        <section className="w-full">
+          <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
+            
+            <div className="mb-6">
+              <h3 className="text-base font-black tracking-wide text-white">AI Notes Workspace Generator Channel</h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Enter any engineering or technical syllabus topic to instantly extract full summary notes, core definitions, and exam questions maps.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start w-full">
+              <div className="lg:col-span-1 space-y-4 w-full">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 mb-1">Upload Study Material Portal</h3>
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50/50 cursor-pointer">
-                    <span className="text-xl block mb-1">📤</span>
-                    <p className="text-[11px] font-bold text-slate-700">Drag & drop files or click to browse</p>
-                  </div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Target Lecture Topic Title</label>
+                  <input 
+                    type="text"
+                    value={notesTopic}
+                    onChange={(e) => setNotesTopic(e.target.value)}
+                    placeholder="e.g., Database Indexing Rules, Laplace Transforms..."
+                    className="w-full px-4 py-3 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs focus:outline-none focus:border-indigo-500 font-medium text-slate-200 placeholder-slate-700"
+                  />
                 </div>
+
+                <button
+                  onClick={handleGenerateNotesRequest}
+                  disabled={loading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/10 cursor-pointer"
+                >
+                  {loading ? "⚡ Compiling Core Matrix..." : "✨ Synthesize Study Notes"}
+                </button>
               </div>
-            </div>
-          </section>
-        ) : currentView === "ai" ? (
-          <AiStudyEngine />
-        ) : currentView === "bookmarks" ? (
-          <section className="space-y-6 w-full">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl shadow-3xs w-full">
-              <h3 className="text-sm font-black text-slate-900 mb-1">Your Bookmarked Materials</h3>
-              {bookmarkedPaperIds.length === 0 ? (
-                <div className="text-center py-12 text-xs text-slate-400 font-bold">📁 Your saved bookmarks collection is empty.</div>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                  {papers.filter(p => bookmarkedPaperIds.includes(p.id)).map(paper => (
-                    <div key={paper.id} className="border p-4 bg-white rounded-xl border-[#EBE8E0] h-36 flex flex-col justify-between shadow-2xs">
-                      <h4 className="text-xs font-bold text-slate-900 line-clamp-2">{paper.title}</h4>
-                      <a href={paper.file_url} target="_blank" rel="noreferrer" className="w-full bg-slate-900 text-white text-xs font-bold py-2 rounded-xl text-center block">View PDF</a>
+
+              <div className="lg:col-span-2 p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/90 shadow-inner min-h-[420px] flex flex-col justify-between w-full">
+                <div className="w-full">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Generated Assets Ledger</span>
+                      <h4 className="text-sm font-black text-white mt-0.5">Syllabus Guide Summary</h4>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-        ) : currentView === "labs" ? (
-          <section className="space-y-6 w-full">
-            <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl w-full">
-              <h3 className="text-sm font-black text-slate-900 mb-1">Laboratory Practicals — {selectedLabYear === "1" ? "1st Year" : "2nd Year"}</h3>
-              <div className="border p-4 rounded-xl bg-slate-50 border-[#EBE8E0]">
-                <span className="text-xs font-black text-slate-800 block">🔌 Core Laboratory Practicals Module Mapping Node</span>
-              </div>
-            </div>
-          </section>
-        ) : currentView === "placement" ? (
-          /* 🔥 PLACEMENT HUB SECTOR Layout Verified */
-          <section className="w-full">
-            <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
-              <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-4 mb-4 w-full">
-                {placementCategories.map((cat) => (
-                  <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`px-4 py-2.5 rounded-xl transition-all border text-[11px] font-black flex items-center gap-1.5 ${activeCategoryKey === cat.id ? "bg-indigo-600 text-white border-indigo-500" : "bg-slate-900/40 text-slate-400 border-slate-800/60"}`}>
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-1.5 border-b border-slate-800/80 pb-3 mb-6 w-full">
-                {placementRegistry[activeCategoryKey]?.map((name) => (
-                  <button key={name} onClick={() => setSelectedCompany(name)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${selectedCompany === name ? "bg-white text-slate-950" : "bg-slate-900/60 text-slate-400 border-slate-800"}`}>
-                    🏢 {name}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
-                  <h4 className="text-[10px] font-black text-purple-400 uppercase">🧮 1. Aptitude & Logic</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.aptitudeName || "Empty File Buffer Slot"}</p>
-                  <button onClick={() => triggerPdfFileInput("aptitude")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
-                    {currentCompanyFiles.aptitudeUrl ? "📄 View Document" : "➕ Upload Aptitude PDF"}
-                  </button>
-                </div>
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
-                  <h4 className="text-[10px] font-black text-indigo-400 uppercase">💻 2. Technical & Coding</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.technicalName || "Empty File Buffer Slot"}</p>
-                  <button onClick={() => triggerPdfFileInput("technical")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
-                    {currentCompanyFiles.technicalUrl ? "📄 View Document" : "➕ Upload Technical PDF"}
-                  </button>
-                </div>
-                <div className="p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/80 flex flex-col justify-between min-h-[220px]">
-                  <h4 className="text-[10px] font-black text-emerald-400 uppercase">🤝 3. HR & Behavioral</h4>
-                  <p className="text-xs text-slate-400 font-medium">{currentCompanyFiles.hrName || "Empty File Buffer Slot"}</p>
-                  <button onClick={() => triggerPdfFileInput("hr")} className="mt-5 w-full bg-slate-900 text-white text-[10px] font-black py-2.5 rounded-xl border border-slate-800">
-                    {currentCompanyFiles.hrUrl ? "📄 View Document" : "➕ Upload HR PDF"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : currentView === "notesGenerator" ? (
-          
-          /* 🔥 PREMIUM REAL GLASSMORPHIC AI NOTES GENERATOR WORKSPACE VIEWPORT */
-          <section className="w-full">
-            <div className="p-6 md:p-8 bg-[#0B0F19] border border-slate-800/80 rounded-3xl text-white shadow-2xl relative w-full overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none" />
-              
-              <div className="mb-6">
-                <h3 className="text-base font-black tracking-wide text-white">AI Notes Workspace Generator Channel</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Enter any engineering or technical syllabus topic to instantly extract full summary notes, core definitions, and exam questions maps.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start w-full">
-                
-                {/* CONTROL INPUT ROW PANEL */}
-                <div className="lg:col-span-1 space-y-4 w-full">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Target Lecture Topic Title</label>
-                    <input 
-                      type="text"
-                      value={notesTopic}
-                      onChange={(e) => setNotesTopic(e.target.value)}
-                      placeholder="e.g., Database Indexing Rules, Laplace Transforms..."
-                      className="w-full px-4 py-3 bg-slate-950/60 border border-slate-800/80 rounded-xl text-xs focus:outline-none focus:border-indigo-500 font-medium text-slate-200 placeholder-slate-700"
-                    />
+                    {generatedNotesContent && (
+                      <button
+                        onClick={() => {
+                          const noteBlob = new Blob([generatedNotesContent], { type: "text/markdown" });
+                          const noteUrl = URL.createObjectURL(noteBlob);
+                          const downloadTrigger = document.createElement("a");
+                          downloadTrigger.href = noteUrl;
+                          downloadTrigger.download = `${notesTopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-ai-notes.md`;
+                          downloadTrigger.click();
+                        }}
+                        className="text-[10px] font-mono bg-slate-900 px-2.5 py-1.5 border border-slate-800 rounded-lg text-slate-300 font-bold hover:text-white hover:border-slate-600 transition"
+                      >
+                        💾 Save Markdown
+                      </button>
+                    )}
                   </div>
 
-                  <button
-                    onClick={handleGenerateNotesRequest}
-                    disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-black text-xs tracking-wide uppercase py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/10 cursor-pointer"
-                  >
-                    {loading ? "⚡ Compiling Core Matrix..." : "✨ Synthesize Study Notes"}
-                  </button>
-                </div>
-
-                {/* NOTE OUTPUT RENDERING DISPLAY PANEL */}
-                <div className="lg:col-span-2 p-6 border border-slate-800/60 rounded-2xl bg-[#111625]/90 shadow-inner min-h-[420px] flex flex-col justify-between w-full">
-                  <div className="w-full">
-                    <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Generated Assets Ledger</span>
-                        <h4 className="text-sm font-black text-white mt-0.5">Syllabus Guide Summary</h4>
+                  <div className="mt-4 text-xs leading-relaxed text-slate-300 font-medium whitespace-pre-wrap max-h-[340px] overflow-y-auto pr-1">
+                    {generatedNotesContent ? generatedNotesContent : (
+                      <div className="text-center py-24 text-slate-500 font-bold">
+                        📋 Provide a core engineering topic title parameter on the left panel to execute real text layout mapping.
                       </div>
-                      {generatedNotesContent && (
-                        <button
-                          onClick={() => {
-                            const noteBlob = new Blob([generatedNotesContent], { type: "text/markdown" });
-                            const noteUrl = URL.createObjectURL(noteBlob);
-                            const downloadTrigger = document.createElement("a");
-                            downloadTrigger.href = noteUrl;
-                            downloadTrigger.download = `${notesTopic.toLowerCase().replace(/[^a-z0-9]/g, "-")}-ai-notes.md`;
-                            downloadTrigger.click();
-                          }}
-                          className="text-[10px] font-mono bg-slate-900 px-2.5 py-1.5 border border-slate-800 rounded-lg text-slate-300 font-bold hover:text-white hover:border-slate-600 transition"
-                        >
-                          💾 Save Markdown
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="mt-4 text-xs leading-relaxed text-slate-300 font-medium whitespace-pre-wrap max-h-[340px] overflow-y-auto pr-1">
-                      {generatedNotesContent ? generatedNotesContent : (
-                        <div className="text-center py-24 text-slate-500 font-bold">
-                          📋 Provide a core engineering topic title parameter on the left panel to execute real text layout mapping.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center text-[9px] font-mono text-slate-600 font-bold">
-                    <span>Export Target: Clear Text Markdown Structure</span>
-                    <span className="text-indigo-500 font-black tracking-wide uppercase">● System Idle</span>
+                    )}
                   </div>
                 </div>
 
+                <div className="pt-4 border-t border-slate-800/50 flex justify-between items-center text-[9px] font-mono text-slate-600 font-bold">
+                  <span>Export Target: Clear Text Markdown Structure</span>
+                  <span className="text-indigo-500 font-black tracking-wide uppercase">● System Idle</span>
+                </div>
               </div>
             </div>
-          </section>
-        ) : (
-          <div className="border p-8 rounded-3xl text-center text-xs text-slate-400 bg-white border-[#EBE8E0]">Workspace tracking cluster active.</div>
-        )}
-      </div>
-    </main>
+          </div>
+        </section>
+      ) : currentView === "examNight" ? (
+        <section className="space-y-6 w-full">
+          <div className="p-6 bg-white border border-[#EBE8E0] rounded-2xl w-full">
+            <h3 className="text-sm font-black text-slate-900 mb-2">⚡ Exam Night Pack: {selectedSubjectKey.toUpperCase()}</h3>
+            <p className="text-xs text-slate-500">Your custom predictive study matrix module has successfully generated.</p>
+          </div>
+        </section>
+      ) : (
+        <div className="border p-8 rounded-3xl text-center text-xs text-slate-400 bg-white border-[#EBE8E0]">Workspace tracking cluster active.</div>
+      )}
+    </div>
   );
 }
